@@ -1,6 +1,6 @@
-from utils.utils.constants import COLS_PER_VAR
-from utils.classes.kde_cell import KDE_Cell
-from utils.classes.scatter_cell import Scatter_Cell
+from ..utils.constants import COLS_PER_VAR
+from .kde_cell import KDE_Cell
+from .scatter_cell import Scatter_Cell
 
 import networkx as nx
 from bokeh.plotting import figure

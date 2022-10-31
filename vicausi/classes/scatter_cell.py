@@ -1,5 +1,5 @@
-from utils.utils.constants import BORDER_COLOR
-from utils.utils.functions import retrieve_intervention_info
+from ..utils.constants import BORDER_COLOR
+from ..utils.functions import retrieve_intervention_info
 
 from bokeh.plotting import figure
 from bokeh.models import ColumnDataSource

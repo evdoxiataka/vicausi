@@ -1,4 +1,4 @@
-from utils.classes.demo import Demo
+from .classes.demo import Demo
 
 def causal_visualizer(files, var_order, status = "i_value",addToggles = False, showData = False):    
     """

@@ -1,5 +1,5 @@
-from utils.utils.functions import kde, pmf, get_data_hgh_indices, retrieve_intervention_info
-from utils.utils.constants import DATA_SIZE, DATA_DIST_RATIO, RUG_DIST_RATIO, RUG_SIZE, BORDER_COLOR, DATA_HGH_NUM
+from ..utils.functions import kde, pmf, get_data_hgh_indices, retrieve_intervention_info
+from ..utils.constants import DATA_SIZE, DATA_DIST_RATIO, RUG_DIST_RATIO, RUG_SIZE, BORDER_COLOR, DATA_HGH_NUM
 
 from bokeh.plotting import figure
 from bokeh.models import ColumnDataSource

@@ -1,6 +1,6 @@
 import numpy as np
 import json
-from utils.utils.constants import x_range_mag
+from ..utils.constants import x_range_mag
 
 class Data():
 
