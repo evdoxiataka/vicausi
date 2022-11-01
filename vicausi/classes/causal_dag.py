@@ -40,7 +40,7 @@ class Causal_DAG():
     def initialize_plot(self):
         self.plot = figure(width = 600, height = 350, x_range=(-1.2, 1.2), y_range=(-1.2, 1.2),
                   x_axis_location = None, y_axis_location = None, toolbar_location = None,
-                  title="")##background_fill_color="#efefef"
+                  title="",background_fill_color="#efefef")##
         self.plot.grid.grid_line_color = None
         ##
         graph = self._create_digraph()

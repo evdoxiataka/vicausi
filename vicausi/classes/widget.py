@@ -68,11 +68,11 @@ class Widget():
             self.widget_box.append(pn.WidgetBox(ti_v, self.w_v))
         ## SLIDER 
         if self.status in ["i_value", "animated"]:
-            self.slider = Slider(start=0., end=5., value=0., step=1., title="x", show_value = False, tooltips = False)
+            self.slider = Slider(start=0., end=5., value=0., step=1., title="x", show_value = False, tooltips = False, disabled = True)                
         elif self.status == "i_density":
-            self.slider = Slider(start=1., end=5., value=1., step=1., title="Number of values in range of x")
+            self.slider = Slider(start=1., end=5., value=1., step=1., title="Number of values in range of x", disabled = True)
         elif self.status == "i_range":  
-            self.slider = RangeSlider(start=0., end=5., value=(0.,5.), step=.1, title="x", show_value = False, tooltips = False)
+            self.slider = RangeSlider(start=0., end=5., value=(0.,5.), step=.1, title="x", show_value = False, tooltips = False, disabled = True)
         if self.slider is not None:# and self.status != "animated"
             self.widget_box.append(self.slider)
         ## VIEW BUTTONS
@@ -84,7 +84,7 @@ class Widget():
             self.toggle2 = Toggle(label="PP Samples", button_type="primary", active=True, background= "blue")
             self.toggle3 = Toggle(label="Post-Intervention PP Samples", button_type="primary", active=True, background= "orange")
             self.widget_box.append(pn.WidgetBox('### View', self.no_i_button, self.toggle1, self.toggle2, self.toggle3))
-        elif self.status != "animated":
+        elif self.status not in ["animated"]:
             self.widget_box = [self.no_i_button]+self.widget_box
             
     def register_callbacks_to_cells(self, dags):
@@ -121,16 +121,18 @@ class Widget():
         self.no_i_button.on_click(self.no_interv_update_slider)
         ## Atomic
         self.w_a.param.watch(partial(self.sel_var_update_slider, "atomic"), ['value'], onlychanged=False) 
-        # self.w_a.param.watch(partial(self.sel_var_animation, "atomic"), ['value']) 
-        self.w_a.param.watch(self.sel_var_animation, ['value']) 
+        if self.status == "animated":
+            self.w_a.param.watch(self.sel_var_animation, ['value']) 
         ##
         if self.w_s:
             ## SHIFT
             self.w_s.param.watch(partial(self.sel_var_update_slider, "shift"), ['value'], onlychanged=False)
-            self.w_s.param.watch(self.sel_var_animation, ['value'])
+            if self.status == "animated":
+                self.w_s.param.watch(self.sel_var_animation, ['value'])
             ## VARIANCE
             self.w_v.param.watch(partial(self.sel_var_update_slider, "variance"), ['value'], onlychanged=False) 
-            self.w_v.param.watch(self.sel_var_animation, ['value']) 
+            if self.status == "animated":
+                self.w_v.param.watch(self.sel_var_animation, ['value']) 
         ## slider
         if self.status in ["i_value", "i_density", "i_range", "animated"]:
             self.slider.on_change("value", partial(self.sel_value_update_slider, "atomic"))
@@ -165,6 +167,8 @@ class Widget():
             cell.update_plot(intervention_arg, i_type)
     
     async def locked_update(self,i,var,interventions):
+        # if i == 0:
+        #     self.slider.disabled = True
         if i < len(interventions[var]):
             self.slider.title = "x:"+"{:.3f}".format(interventions[var][i])
             self.slider.value = i
@@ -190,7 +194,7 @@ class Widget():
             self.w_v.disabled = True
             ##
             interventions = self._retrieve_intervention_values(i_type)
-            for i,value in enumerate(interventions[var]):                
+            for i,_ in enumerate(interventions[var]):                
                 pn.state.curdoc.add_next_tick_callback(partial(self.locked_update, i,var,interventions))
                 await asyncio.sleep(0.5)
             pn.state.curdoc.add_next_tick_callback(partial(self.locked_update, i+1,var,interventions))
@@ -270,6 +274,7 @@ class Widget():
             return None
     
     def _reset_slider(self):
+        self.slider.disabled = True
         if self.status in ["i_value","animated"]:
             # slider.param.set_param(options = list(np.arange(0,5,1.)), value = 0.)
             self.slider.start = 0.
@@ -317,6 +322,8 @@ class Widget():
             return None
     
     def _update_slider(self, var, interventions):
+        if self.status not in ["animated"] and self.slider.disabled:
+            self.slider.disabled = False
         if self.status == "i_value":
             interv_values = interventions[var]
             self.slider.start = 0
