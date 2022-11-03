@@ -3,7 +3,7 @@ from .widget import Widget
 from .causal_dag import Causal_DAG
 
 import panel as pn
-pn.extension()
+pn.extension('katex', 'mathjax')
 
 class Demo():
     def __init__(self, files, var_order, status = "i_value", addToggles = False, showData = False):

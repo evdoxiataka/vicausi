@@ -20,5 +20,5 @@ RUG_DIST_RATIO = 5.0
 RUG_SIZE = 10
 IMPULSE_SHAPE = 20
 DATA_HGH_NUM = 5 #number of observations to highlight while slider always odd number
-BORDER_COLOR ='#d8d8d8'
+BORDER_COLOR ='#efefef'
 COLS_PER_VAR = 2

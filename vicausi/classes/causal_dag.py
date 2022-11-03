@@ -1,12 +1,12 @@
 from ..utils.constants import COLS_PER_VAR
 from .kde_cell import KDE_Cell
 from .scatter_cell import Scatter_Cell
+from ..utils.constants import BORDER_COLOR
 
 import networkx as nx
 from bokeh.plotting import figure
 from bokeh.models import ColumnDataSource, Arrow, VeeHead, LabelSet
 
-import numpy as np
 import panel as pn
 pn.extension()
 
@@ -38,10 +38,17 @@ class Causal_DAG():
         self.create_grid()
 
     def initialize_plot(self):
-        self.plot = figure(width = 600, height = 350, x_range=(-1.2, 1.2), y_range=(-1.2, 1.2),
-                  x_axis_location = None, y_axis_location = None, toolbar_location = None,
-                  title="",background_fill_color="#efefef")##
+        self.plot = figure(width = 600, height = 250, x_range = (-1.2, 1.2), y_range = (-1.2, 1.2),
+                  x_axis_location = None, y_axis_location = None, toolbar_location = None, background_fill_color = BORDER_COLOR,
+                  title="Model"+" "+str(self.dag_id))##
         self.plot.grid.grid_line_color = None
+        self.plot.min_border = 0
+        self.plot.title.align = "center"
+        self.plot.title.text_font_size = "16px"
+        self.plot.title.background_fill_color = '#00000000'
+        self.plot.title.background_fill_alpha = 0
+        self.plot.border_fill_color = '#00000000'
+        self.plot.border_fill_alpha = 0
         ##
         graph = self._create_digraph()
         pos = nx.planar_layout(graph)
@@ -105,7 +112,6 @@ class Causal_DAG():
                     if i_var in i_vars:
                         self.plot.select(tags=[i_var]).end.line_color = "orange"
                         self.plot.select(tags=[i_var]).end.fill_color = "orange"
-                        # print(self.dag_id,i_var,self.plot.select(tags=[i_var]).end.line_color)
                     else:
                         self.plot.select(tags=[i_var]).end.line_color = "blue"
                         self.plot.select(tags=[i_var]).end.fill_color = "blue"
@@ -178,4 +184,6 @@ class Causal_DAG():
         return self.plot
 
     def get_dag_col(self):
-        return pn.Column(pn.pane.Bokeh(self.plot), self.grid)
+        return pn.Column(pn.pane.Bokeh(self.plot), self.grid)#pn.pane.Markdown(f'''
+                                # **Model {self.dag_id}**
+                                # ''', align='center'), 

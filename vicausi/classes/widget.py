@@ -32,6 +32,8 @@ class Widget():
             self.toggle2 = None ## toggle button for posterior predictive samples
             self.toggle3 = None ## toggle button for after intervention samples
         self.widget_box = []
+        if self.status == "animated":
+            self.widget_box.append(pn.Spacer(height=16))
         ##
         self.create_widgets()
         self.register_callbacks()
@@ -166,9 +168,7 @@ class Widget():
                 intervention_arg = self._retrieve_intervention_argument(event.new, interventions)   
             cell.update_plot(intervention_arg, i_type)
     
-    async def locked_update(self,i,var,interventions):
-        # if i == 0:
-        #     self.slider.disabled = True
+    async def locked_update(self, i, var, interventions):
         if i < len(interventions[var]):
             self.slider.title = "x:"+"{:.3f}".format(interventions[var][i])
             self.slider.value = i
@@ -276,20 +276,17 @@ class Widget():
     def _reset_slider(self):
         self.slider.disabled = True
         if self.status in ["i_value","animated"]:
-            # slider.param.set_param(options = list(np.arange(0,5,1.)), value = 0.)
             self.slider.start = 0.
             self.slider.end = 5.
             self.slider.step = 1.
             self.slider.title = "x"
             self.slider.value = 0.
         elif self.status == "i_density":
-            # slider.param.set_param(options = list(np.arange(1,5,1.)), value = 1.)
             self.slider.start = 1.
             self.slider.end = 5.
             self.slider.step = 1.
             self.slider.value = 1.
         elif self.status == "i_range":
-            # slider.param.set_param(start = 0, end = 5, step = 1.,value = (0.,5.))
             self.slider.start = 0.
             self.slider.end = 5.
             self.slider.step = 1.
