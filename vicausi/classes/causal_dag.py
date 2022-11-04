@@ -40,7 +40,7 @@ class Causal_DAG():
     def initialize_plot(self):
         self.plot = figure(width = 600, height = 250, x_range = (-1.2, 1.2), y_range = (-1.2, 1.2),
                   x_axis_location = None, y_axis_location = None, toolbar_location = None, background_fill_color = BORDER_COLOR,
-                  title="Model"+" "+str(self.dag_id))##
+                  title="Causal Model"+" "+str(self.dag_id + 1))##
         self.plot.grid.grid_line_color = None
         self.plot.min_border = 0
         self.plot.title.align = "center"
@@ -184,6 +184,4 @@ class Causal_DAG():
         return self.plot
 
     def get_dag_col(self):
-        return pn.Column(pn.pane.Bokeh(self.plot), self.grid)#pn.pane.Markdown(f'''
-                                # **Model {self.dag_id}**
-                                # ''', align='center'), 
+        return pn.Column(pn.pane.Bokeh(self.plot), self.grid)
