@@ -180,6 +180,9 @@ class Data():
     def get_dag_by_id(self, dag_id):
         return self.causal_inference['dags'][dag_id]['dag']
     
+    def get_dags(self):
+        return [self.causal_inference['dags'][i]['dag'] for i in self.causal_inference['dags']]
+
     def get_var_type(self, var):
         if var in self.causal_inference["vars"]:
             return self.causal_inference["vars"][var]["type"]
