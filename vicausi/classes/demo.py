@@ -1,6 +1,7 @@
 from .data import Data
 from .widget import Widget
 from .causal_dag import Causal_DAG
+from .scatter_matrix import Scatter_Matrix
 
 import panel as pn
 pn.extension('katex', 'mathjax')
@@ -36,11 +37,13 @@ class Demo():
         widget_boxes = widget.get_widget_box()
         ##    
         causal_dags_ids = self.data.get_causal_dags_ids()
-        causal_dags_obj = [Causal_DAG(self.data, dag_id, self.var_order, self.status, self.showData) for dag_id in causal_dags_ids]
+        causal_dags_obj = [Causal_DAG(self.data, dag_id) for dag_id in causal_dags_ids]
         ##
-        widget.register_callbacks_to_cells(causal_dags_obj)
+        grid_obs = [Scatter_Matrix(self.data, dag_id, self.var_order, self.status, self.showData) for dag_id in causal_dags_ids]
+        ##
+        widget.register_callbacks_to_cells(causal_dags_obj, grid_obs)
         ## DIAGRAMS - FIGURES 
-        cols = [dag.get_dag_col() for dag in causal_dags_obj]
+        cols = [pn.Column(pn.pane.Bokeh(causal_dags_obj[i].get_plot()), grid_obs[i].get_grid()) for i,_ in enumerate(causal_dags_obj)]
         self.plot = pn.Row(pn.Column(*widget_boxes),pn.Row(*cols))
         
     def get_plot(self):

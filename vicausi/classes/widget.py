@@ -20,7 +20,7 @@ class Widget():
         self.a_interventions = a_interventions
         self.s_interventions = s_interventions
         self.v_interventions = v_interventions
-        self.dags = None ## List of Causal_DAGS objects
+        # self.dags = None ## List of Causal_DAGS objects
         ##
         self.w_a = None ## Radio button widget for atomic intervention
         self.w_s = None
@@ -89,21 +89,24 @@ class Widget():
         elif self.status not in ["animated"]:
             self.widget_box = [self.no_i_button]+self.widget_box
             
-    def register_callbacks_to_cells(self, dags):
+    def register_callbacks_to_cells(self, dags, grids):
         """
         Parameters:
         -----------
             dags: list of Causal_DAGS objects
+            grids: List of Scatter_Matrix objects
         """
-        self.dags = dags
+        # self.dags = dags
         for dag in dags:
             self.no_i_button.on_click(partial(self.no_interv_update_dag, dag))
             self.w_a.param.watch(partial(self.sel_var_update_dag, "atomic", dag), ['value'], onlychanged=False)
             if self.w_s:
                 self.w_s.param.watch(partial(self.sel_var_update_dag, "shift", dag), ['value'], onlychanged=False)
                 self.w_v.param.watch(partial(self.sel_var_update_dag, "variance", dag), ['value'], onlychanged=False)
-            for var in dag.cells:
-                for cell in dag.cells[var]:
+        ##
+        for grid in grids:
+            for var in grid.cells:
+                for cell in grid.cells[var]:
                     if self.addToggles:
                         self._link_buttons_with_glyphs(var, cell)  
                     ##
