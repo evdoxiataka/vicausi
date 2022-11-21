@@ -8,7 +8,7 @@ import panel as pn
 pn.extension()
 
 class Causal_DAG():
-    def __init__(self, data, dag_id, mean_obs): # var_order, status, showData = True
+    def __init__(self, data, dag_id, mean_obs = False): # var_order, status, showData = True
         """
             Parameters:
             --------

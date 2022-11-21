@@ -277,7 +277,8 @@ class Widget():
             return None
     
     def _reset_slider(self):
-        self.slider.disabled = True
+        if self.status not in ["static"]:
+            self.slider.disabled = True
         if self.status in ["i_value","animated"]:
             self.slider.start = 0.
             self.slider.end = 5.
@@ -322,7 +323,7 @@ class Widget():
             return None
     
     def _update_slider(self, var, interventions):
-        if self.status not in ["animated"] and self.slider.disabled:
+        if self.status not in ["animated", "static"] and self.slider.disabled:
             self.slider.disabled = False
         if self.status == "i_value":
             interv_values = interventions[var]

@@ -22,7 +22,8 @@ class Demo_Comparative_Graph():
         self.status = status
         self.addToggles = addToggles
         self.showData = showData     
-        self.mean_obs = mean_obs   
+        self.mean_obs = mean_obs  
+        self.grid = None		
         ##
         self.plot = None
         self.data = None
@@ -40,12 +41,12 @@ class Demo_Comparative_Graph():
         causal_dags_ids = self.data.get_causal_dags_ids()
         causal_dags_obj = [Causal_DAG(self.data, dag_id, mean_obs = self.mean_obs) for dag_id in causal_dags_ids]
         ##
-        grid_obj = Scatter_Matrix_Comparative(self.data, self.var_order, self.status, self.showData, self.mean_obs)
+        self.grid = Scatter_Matrix_Comparative(self.data, self.var_order, self.status, self.showData, self.mean_obs)
         ##
-        widget.register_callbacks_to_cells(causal_dags_obj, [grid_obj])
+        widget.register_callbacks_to_cells(causal_dags_obj, [self.grid])
         ## DIAGRAMS - FIGURES 
         cols = [pn.pane.Bokeh(causal_dags_obj[i].get_plot()) for i,_ in enumerate(causal_dags_obj)]
-        self.plot = pn.Row(pn.Column(*widget_boxes),pn.Column(pn.Row(*cols),grid_obj.get_grid()))
+        self.plot = pn.Row(pn.Column(*widget_boxes),pn.Column(pn.Row(*cols),self.grid.get_grid()))
         
     def get_plot(self):
         return self.plot
