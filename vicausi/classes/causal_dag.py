@@ -22,7 +22,8 @@ class Causal_DAG():
         if self.mean_obs:
             self.base_color = BASE_COLOR
         else:
-            self.base_color = COLORs[self.dag_id]
+            # self.base_color = COLORs[self.dag_id]
+            self.base_color = BASE_COLOR
         ##
         self.plot = None
         ##
@@ -101,12 +102,12 @@ class Causal_DAG():
             self.nodes_cds.data =  new_node_data
         else:
             if i_type == "atomic":
-                new_edge_data['color'] = [COLORs_sim[self.dag_id] if i_var in i_vars else self.base_color for i_var in self.edges_cds.data['stop_n']]
+                new_edge_data['color'] = [COLORs_sim[1] if i_var in i_vars else self.base_color for i_var in self.edges_cds.data['stop_n']]
                 new_edge_data['line_dash'] = ['dashed' if i_var in i_vars else 'solid' for i_var in self.edges_cds.data['stop_n']]
                 for i_var in self.edges_cds.data['stop_n']:
                     if i_var in i_vars:
-                        self.plot.select(tags=[i_var]).end.line_color = COLORs_sim[self.dag_id] 
-                        self.plot.select(tags=[i_var]).end.fill_color = COLORs_sim[self.dag_id] 
+                        self.plot.select(tags=[i_var]).end.line_color = COLORs_sim[1]#COLORs_sim[self.dag_id] 
+                        self.plot.select(tags=[i_var]).end.fill_color = COLORs_sim[1]#COLORs_sim[self.dag_id] 
                     else:
                         self.plot.select(tags=[i_var]).end.line_color = self.base_color
                         self.plot.select(tags=[i_var]).end.fill_color =self.base_color
@@ -118,7 +119,7 @@ class Causal_DAG():
                     self.plot.select(tags=[i_var]).end.fill_color = self.base_color
             self.edges_cds.data = new_edge_data
             ##
-            new_node_data['color'] = [COLORs_sim[self.dag_id]  if n in i_vars else self.base_color for n in self.nodes_cds.data['name']]
+            new_node_data['color'] = [COLORs_sim[1]  if n in i_vars else self.base_color for n in self.nodes_cds.data['name']]
             self.nodes_cds.data =  new_node_data
 
     ## HELPERS
