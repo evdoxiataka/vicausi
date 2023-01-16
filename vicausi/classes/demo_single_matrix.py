@@ -32,23 +32,55 @@ class Demo_Single_Matrix():
         self.initialize_plot()
 
     def initialize_plot(self):
+        NUM_STATIC_INSTANCES = 3
         ## Create Data object
         self.data = Data(self.files)
         a_interventions, s_interventions, v_interventions = self.data.get_interventions()
-
-        ## Create Widget object
-        widget = Widget_Single_Matrix(self.status, self.interventions, a_interventions, s_interventions, v_interventions)
-        widget_boxes = widget.get_widget_box()
         ##    
         causal_dags_ids = self.data.get_causal_dags_ids()
         causal_dags_obj = [Causal_DAG(self.data, dag_id) for dag_id in causal_dags_ids]
-        ##
-        grid_obs = Scatter_Matrix(self.data, self.dag_id, self.var_order, self.status, self.showData)
-        ##
-        widget.register_callbacks_to_cells(causal_dags_obj, [grid_obs])
-        ## DIAGRAMS - FIGURES 
-        cols = [pn.Column(pn.pane.Bokeh(causal_dags_obj[i].get_plot())) for i,_ in enumerate(causal_dags_obj)]
-        self.plot = pn.Row(pn.Column(*widget_boxes),pn.Column(pn.Row(grid_obs.get_grid()),pn.Row(*cols)))
+        if self.status not in ["static"]:
+            ## Create Widget object
+            widget = Widget_Single_Matrix(self.status, self.interventions, a_interventions, s_interventions, v_interventions)
+            widget_boxes = widget.get_widget_box()
+            ##
+            grid_obs = Scatter_Matrix(self.data, self.dag_id, self.var_order, self.status, self.showData)
+            ##
+            widget.register_callbacks_to_dags(causal_dags_obj)
+            widget.register_callbacks_to_cells([grid_obs])
+            ## DIAGRAMS - FIGURES 
+            cols = [pn.Column(pn.pane.Bokeh(causal_dags_obj[i].get_plot())) for i,_ in enumerate(causal_dags_obj)]
+            self.plot = pn.Row(pn.Column(*widget_boxes),pn.Column(pn.Row(grid_obs.get_grid()),pn.Row(*cols)))
+        else:
+            widgets = []
+            grid_obs = []
+            for i_type, i_vars in self.interventions.items():
+                for i_var in i_vars:
+                    for i in range(NUM_STATIC_INSTANCES):
+                        ## Create Widget object
+                        widgets.append(Widget_Single_Matrix("i_value", {i_type:[i_var]}, a_interventions, s_interventions, v_interventions))
+                        ##
+                        grid_obs.append(Scatter_Matrix(self.data, self.dag_id, self.var_order, "i_value", self.showData))
+                        ##
+                        # if i == 0:
+                        #     widgets[-1].register_callbacks_to_dags(causal_dags_obj)
+                        widgets[-1].register_callbacks_to_cells([grid_obs[-1]])
+                        ## set slider to ith i_value
+                        slider_value_idx = 0
+                        interventions = None
+                        if i_type == "atomic":                            
+                            interventions = a_interventions[i_var]
+                        elif i_type == "shift":
+                            interventions = s_interventions[i_var]
+                        elif i_type == "variance":
+                            interventions = v_interventions[i_var]
+                        slider_value_idx = len(interventions)
+                        slider_value_idx = i*int(slider_value_idx / NUM_STATIC_INSTANCES)
+                        widgets[-1].set_slider_value(i_type, i_var, slider_value_idx)
+                    ## DIAGRAMS - FIGURES 
+                    dags_cols = [pn.Column(pn.pane.Bokeh(causal_dags_obj[i].get_plot())) for i,_ in enumerate(causal_dags_obj)]
+                    grids_cols = [pn.Column(grid_obs[i].get_grid()) for i,_ in enumerate(grid_obs)]
+                    self.plot = pn.Column(pn.Row(*grids_cols),pn.Row(*dags_cols))
         
     def get_plot(self):
         return self.plot

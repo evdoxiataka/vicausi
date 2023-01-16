@@ -70,13 +70,12 @@ class Widget_Single_Matrix():
         ## VIEW BUTTONS
         ## No intervention
         self.no_i_button = pn.widgets.Button(name='Clear Intervention', button_type='primary')
-            
-    def register_callbacks_to_cells(self, dags, grids):
+
+    def register_callbacks_to_dags(self, dags):
         """
         Parameters:
         -----------
             dags: list of Causal_DAGS objects
-            grids: List of Scatter_Matrix objects
         """
         for dag in dags:
             self.no_i_button.on_click(partial(self.no_interv_update_dag, dag))
@@ -86,7 +85,13 @@ class Widget_Single_Matrix():
                 self.w_s.param.watch(partial(self.sel_var_update_dag, "shift", dag), ['value'], onlychanged=False)
             if self.w_v:
                 self.w_v.param.watch(partial(self.sel_var_update_dag, "variance", dag), ['value'], onlychanged=False)
-        ##
+
+    def register_callbacks_to_cells(self, grids):
+        """
+        Parameters:
+        -----------
+            grids: List of Scatter_Matrix objects
+        """
         for grid in grids:
             for var in grid.cells:
                 for cell in grid.cells[var]:
@@ -317,5 +322,14 @@ class Widget_Single_Matrix():
         return intervention_arg
             
     ## SETTERS - GETTERS
+    def set_slider_value(self, i_type, i_var, i_value_idx):
+        if i_type == "atomic":
+            self.w_a.value = i_var
+        elif i_type == "shift":
+            self.w_s.value = i_var
+        elif i_type == "variance":
+            self.w_v.value = i_var
+        self.slider.value = i_value_idx
+
     def get_widget_box(self):
         return self.widget_box
