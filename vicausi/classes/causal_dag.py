@@ -65,16 +65,16 @@ class Causal_DAG():
         ## ARROWS
         for i in range(len(graph.edges)):
             # self.plot.add_layout( Arrow(end = VeeHead(size=15), x_start = xs[i][0]+0.49*(xs[i][1]-xs[i][0]), y_start = ys[i][0]+0.49*(ys[i][1]-ys[i][0]), x_end = (xs[i][0]+xs[i][1])/2, y_end = (ys[i][0]+ys[i][1])/2))
-            self.plot.add_layout( Arrow(end = VeeHead(size=16,line_color=self.base_color,fill_color=self.base_color), x_start = xs[i][1]-0.03*(xs[i][1]-xs[i][0]), y_start = ys[i][1]-0.03*(ys[i][1]-ys[i][0]), x_end = xs[i][1]-0.02*(xs[i][1]-xs[i][0]), y_end = ys[i][1]-0.02*(ys[i][1]-ys[i][0]), tags = [stop_n[i]] ))
+            self.plot.add_layout( Arrow(end = VeeHead(size = 16, line_color = self.base_color, fill_color=self.base_color), x_start = xs[i][1]-0.03*(xs[i][1]-xs[i][0]), y_start = ys[i][1]-0.03*(ys[i][1]-ys[i][0]), x_end = xs[i][1]-0.02*(xs[i][1]-xs[i][0]), y_end = ys[i][1]-0.02*(ys[i][1]-ys[i][0]), tags = [stop_n[i]] ))
         ## EDGES
         self.edges_cds = ColumnDataSource(data = {'xs':xs,'ys':ys,'start_n':start_n,'stop_n':stop_n,'color':color,"line_dash":line_dash})
-        self.plot.multi_line(xs = 'xs', ys = 'ys', source = self.edges_cds, line_color='color', line_alpha=0.8, line_width=1.5, line_join = 'miter', line_dash = "line_dash", name = 'edge')
+        self.plot.multi_line(xs = 'xs', ys = 'ys', source = self.edges_cds, line_color='color', line_alpha = 0.8, line_width = 1.5, line_join = 'miter', line_dash = "line_dash", name = 'edge')
         ## NODES
         self.nodes_cds = ColumnDataSource(data = {'x':x,'y':y,'name':nodes,'color':[self.base_color]*len(nodes)})
         self.plot.circle(x='x', y='y', source = self.nodes_cds, size=18., fill_color='color', line_color='color', alpha=1., name = 'node')
         # LABELS
         self.labels_cds = ColumnDataSource({'x': x, 'y': y,'name': [i for i in pos]})
-        self.plot.add_layout(LabelSet(x='x', y='y', text='name', source = self.labels_cds, x_offset=-20,y_offset=10))
+        self.plot.add_layout(LabelSet(x='x', y='y', text='name', source = self.labels_cds, x_offset=-20, y_offset=10, text_font_size="14pt"))
 
     def update_plot(self, i_vars, i_type = None):
         """
