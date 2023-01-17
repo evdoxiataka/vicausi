@@ -16,7 +16,10 @@ class Widget_Single_Matrix():
                 interventions    A Dict(<i_type>: List of <i_var>)
         """
         ##
-        self. status = status
+        self.status_extern = status
+        self.status = status
+        if status == "static":
+            self.status = "i_value"
         self.a_interventions = a_interventions
         self.s_interventions = s_interventions
         self.v_interventions = v_interventions
@@ -31,7 +34,10 @@ class Widget_Single_Matrix():
         if self.status == "animated":
             self.widget_box.append(pn.Spacer(height=16))
         ##
-        self.slider_titles_map = {"atomic":"Set the value of *","shift":"Set the shift of *'s mean (mean+x)","variance":"Set the divisor of *'s variance (variance/x)"}
+        if self.status_extern == "i_value":
+            self.slider_titles_map = {"atomic":"Set the value of *","shift":"Set the shift (x) of *'s mean (mean+x)","variance":"Set the divisor (x) of *'s variance (variance/x)"}
+        else:
+            self.slider_titles_map = {"atomic":"The value of * is","shift":"The shift (x) of *'s mean (mean+x) is","variance":"The divisor (x) of *'s variance (variance/x) is"}
         ##
         self.create_widgets()
         self.register_callbacks()

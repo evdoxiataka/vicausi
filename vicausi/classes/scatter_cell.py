@@ -54,6 +54,11 @@ class Scatter_Cell():
         self.plot = figure(width = 400, height = 400, x_range = self.x_range_var1, y_range = self.x_range_var2, tools = [])
         self.plot.xaxis[0].axis_label = self.var1
         self.plot.yaxis[0].axis_label = self.var2
+        self.plot.xaxis.axis_label_text_font_size = "14pt"
+        self.plot.xaxis.major_label_text_font_size = "12pt"
+        # self.plot.axis.axis_label_text_font_style = 'bold'
+        self.plot.yaxis.axis_label_text_font_size = "14pt"
+        self.plot.yaxis.major_label_text_font_size = "12pt"
         self.plot.border_fill_color = BORDER_COLOR
         self.plot.min_border = 15
         self.plot.toolbar.logo = None
