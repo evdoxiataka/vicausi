@@ -13,6 +13,9 @@ tune = 2000
 pp_samples = 20
 sim_i_pp_samples = 6
 
+## number of instances in static condition
+NUM_STATIC_INSTANCES = 4
+
 ## KDE plots' constants
 DATA_SIZE = 6
 DATA_DIST_RATIO = 3.0

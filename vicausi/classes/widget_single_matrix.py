@@ -1,5 +1,6 @@
 from functools import partial
 from bokeh.models import Slider
+from ..utils.constants import NUM_STATIC_INSTANCES
 import asyncio
 import panel as pn
 pn.extension()
@@ -36,28 +37,23 @@ class Widget_Single_Matrix():
         self.register_callbacks()
     
     def create_widgets(self):   
-        options = {}
-        for i_type, i_vars in self.interventions.items():
-            if i_type not in options:
-                options[i_type] = []
-            options[i_type].extend(i_vars)
         ## Atomic
-        if "atomic" in options:
-            self.w_a = pn.widgets.RadioBoxGroup(name ='varsRadios', options = options["atomic"], inline=True, value = "")
+        if "atomic" in self.interventions:
+            self.w_a = pn.widgets.RadioBoxGroup(name ='varsRadios', options = self.interventions["atomic"], inline=True, value = "")
             title = pn.pane.Markdown('''
                                 ### Atomic Intervention
                                 ''')
             self.widget_box.append(pn.WidgetBox(title, self.w_a))
         ## Shift
-        if "shift" in options:
-            self.w_s = pn.widgets.RadioBoxGroup(name ='varsRadios', options = options["shift"], inline=True, value = "")
+        if "shift" in self.interventions:
+            self.w_s = pn.widgets.RadioBoxGroup(name ='varsRadios', options = self.interventions["shift"], inline=True, value = "")
             title = pn.pane.Markdown('''
                                 ### Shift Intervention
                                 ''')
             self.widget_box.append(pn.WidgetBox(title, self.w_s))
         ## Variance
-        if "variance" in options:
-            self.w_v = pn.widgets.RadioBoxGroup(name ='varsRadios', options = options["variance"], inline=True, value = "")
+        if "variance" in self.interventions:
+            self.w_v = pn.widgets.RadioBoxGroup(name ='varsRadios', options = self.interventions["variance"], inline=True, value = "")
             title = pn.pane.Markdown('''
                                 ### Variance Intervention
                                 ''')
@@ -124,7 +120,7 @@ class Widget_Single_Matrix():
             if self.status == "animated":
                 self.w_s.param.watch(self.sel_var_animation, ['value'])
         ## VARIANCE
-        if self.w_s: 
+        if self.w_v: 
             self.w_v.param.watch(partial(self.sel_var_update_slider, "variance"), ['value'], onlychanged=False) 
             if self.status == "animated":
                 self.w_v.param.watch(self.sel_var_animation, ['value']) 
@@ -135,9 +131,54 @@ class Widget_Single_Matrix():
                 self.slider.on_change("value", partial(self.sel_value_update_slider, "atomic"))            
             if self.w_s:
                 self.slider.on_change("value", partial(self.sel_value_update_slider, "shift"))
-            if self.w_s:
+            if self.w_v:
                 self.slider.on_change("value", partial(self.sel_value_update_slider, "variance"))   
-            
+
+    def register_callbacks_in_static(self, widgets_to_be_linked):  
+        """
+            widgets_to_be_linked: List of Widget_Single_Matrix objects
+        """      
+        ## ATOMIC
+        if self.w_a:
+            self.w_a.param.watch(partial(self.sel_var_update_static, "atomic", widgets_to_be_linked), ['value'], onlychanged = False) 
+        ## SHIFT
+        if self.w_s:            
+            self.w_s.param.watch(partial(self.sel_var_update_static, "shift", widgets_to_be_linked), ['value'], onlychanged = False)
+        ## VARIANCE
+        if self.w_v: 
+            self.w_v.param.watch(partial(self.sel_var_update_static, "variance", widgets_to_be_linked), ['value'], onlychanged = False) 
+
+    ## CALlBACK called in static condition
+    def sel_var_update_static(self, i_type, widgets_to_be_linked, event):
+        """
+            i_type: String in {"atomic","shift","variance"}
+            widgets_to_be_linked: List of Widget_Single_Matrix objects
+        """
+        if event.new:
+            i = 0
+            slider_value_idx = 0
+            interventions = None
+            if i_type == "atomic":                            
+                interventions = self.a_interventions[event.new]
+            elif i_type == "shift":
+                interventions = self.s_interventions[event.new]
+            elif i_type == "variance":
+                interventions = self.v_interventions[event.new]
+            num_of_samples = len(interventions)
+            slider_value_idx = i*int(num_of_samples / NUM_STATIC_INSTANCES)
+            self.set_slider_value(slider_value_idx)
+            ## update widgets and slider of rest static instances
+            for widget in widgets_to_be_linked:
+                i = i + 1
+                if i_type == "atomic":
+                    widget.w_a.value = event.new
+                elif i_type == "shift":
+                    widget.w_s.value = event.new
+                elif i_type == "variance":
+                    widget.w_v.value = event.new
+                slider_value_idx = i*int(num_of_samples / NUM_STATIC_INSTANCES)
+                widget.set_slider_value(slider_value_idx)
+
     ## CALlBACKS called when a radio button is clicked
     def sel_var_update_dag(self, i_type, dag, event):
         """
@@ -203,7 +244,7 @@ class Widget_Single_Matrix():
         """
         if event.new:
             ##
-            # self._reset_i_radio_buttons(itype = i_type)
+            self._reset_i_radio_buttons(itype = i_type)
             interventions = self._retrieve_intervention_values(i_type)
             ##
             self._update_slider(event.new, i_type, interventions)
@@ -278,6 +319,21 @@ class Widget_Single_Matrix():
                 self.w_s.value = ""
             if self.w_v:
                 self.w_v.value = ""
+        elif itype == "atomic":
+            if self.w_s:
+                self.w_s.value = ""
+            if self.w_v:
+                self.w_v.value = ""
+        elif itype == "shift":
+            if self.w_a:
+                self.w_a.value = ""
+            if self.w_v:
+                self.w_v.value = ""
+        elif itype == "variance":
+            if self.w_a:
+                self.w_a.value = ""
+            if self.w_s:
+                self.w_s.value = ""
             
     def _retrieve_radio_button_selection(self, itype):
         if itype == "atomic":
@@ -322,14 +378,13 @@ class Widget_Single_Matrix():
         return intervention_arg
             
     ## SETTERS - GETTERS
-    def set_slider_value(self, i_type, i_var, i_value_idx):
-        if i_type == "atomic":
-            self.w_a.value = i_var
-        elif i_type == "shift":
-            self.w_s.value = i_var
-        elif i_type == "variance":
-            self.w_v.value = i_var
+    def set_slider_value(self, i_value_idx):
+        self.slider.disabled = False
         self.slider.value = i_value_idx
+        self.slider.disabled = True
 
     def get_widget_box(self):
         return self.widget_box
+
+    def get_widget_box_without_slider(self):
+        return self.widget_box[:-1]
