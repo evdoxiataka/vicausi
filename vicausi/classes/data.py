@@ -1,6 +1,6 @@
 import numpy as np
 import json
-from ..utils.constants import x_range_mag
+from ..utils.constants import x_range_mag, stratification_window_magn
 
 class Data():
 
@@ -198,6 +198,15 @@ class Data():
     def get_var_pp_samples(self, var, dag_id): 
         if var in self.causal_inference['dags'][dag_id]['pp_samples']:
             return self.causal_inference['dags'][dag_id]['pp_samples'][var]
+        else:
+            return None
+
+    def get_var_pp_samples_idx(self, var, dag_id, window_median): 
+        if var in self.causal_inference['dags'][dag_id]['pp_samples']:
+            pp_samples = self.causal_inference['dags'][dag_id]['pp_samples'][var].flatten()
+            window_min = window_median - stratification_window_magn*window_median
+            window_max = window_median + stratification_window_magn*window_median
+            return np.where((pp_samples > window_min) & (pp_samples < window_max))
         else:
             return None
         

@@ -13,13 +13,13 @@ class Widget_Single_Matrix():
             --------
                 status           A String within the set {"i_value","static","animated","i_density","i_range"}.
                 a_interventions  A Dict(<var>: List of intervention values)
-                interventions    A Dict(<i_type>: List of <i_var>)
+                interventions    A Dict(<i_type>: List of <i_var>). Interventions to be included in widgets.
         """
         ##
         self.status_extern = status
         self.status = status
-        if status == "static":
-            self.status = "i_value"
+        # if status == "static":
+        #     self.status = "i_value"
         self.a_interventions = a_interventions
         self.s_interventions = s_interventions
         self.v_interventions = v_interventions
@@ -140,50 +140,50 @@ class Widget_Single_Matrix():
             if self.w_v:
                 self.slider.on_change("value", partial(self.sel_value_update_slider, "variance"))   
 
-    def register_callbacks_in_static(self, widgets_to_be_linked):  
-        """
-            widgets_to_be_linked: List of Widget_Single_Matrix objects
-        """      
-        ## ATOMIC
-        if self.w_a:
-            self.w_a.param.watch(partial(self.sel_var_update_static, "atomic", widgets_to_be_linked), ['value'], onlychanged = False) 
-        ## SHIFT
-        if self.w_s:            
-            self.w_s.param.watch(partial(self.sel_var_update_static, "shift", widgets_to_be_linked), ['value'], onlychanged = False)
-        ## VARIANCE
-        if self.w_v: 
-            self.w_v.param.watch(partial(self.sel_var_update_static, "variance", widgets_to_be_linked), ['value'], onlychanged = False) 
+    # def register_callbacks_in_static(self, widgets_to_be_linked):  
+    #     """
+    #         widgets_to_be_linked: List of Widget_Single_Matrix objects
+    #     """      
+    #     ## ATOMIC
+    #     if self.w_a:
+    #         self.w_a.param.watch(partial(self.sel_var_update_static, "atomic", widgets_to_be_linked), ['value'], onlychanged = False) 
+    #     ## SHIFT
+    #     if self.w_s:            
+    #         self.w_s.param.watch(partial(self.sel_var_update_static, "shift", widgets_to_be_linked), ['value'], onlychanged = False)
+    #     ## VARIANCE
+    #     if self.w_v: 
+    #         self.w_v.param.watch(partial(self.sel_var_update_static, "variance", widgets_to_be_linked), ['value'], onlychanged = False) 
 
-    ## CALlBACK called in static condition
-    def sel_var_update_static(self, i_type, widgets_to_be_linked, event):
-        """
-            i_type: String in {"atomic","shift","variance"}
-            widgets_to_be_linked: List of Widget_Single_Matrix objects
-        """
-        if event.new:
-            i = 0
-            slider_value_idx = 0
-            interventions = None
-            if i_type == "atomic":                            
-                interventions = self.a_interventions[event.new]
-            elif i_type == "shift":
-                interventions = self.s_interventions[event.new]
-            elif i_type == "variance":
-                interventions = self.v_interventions[event.new]
-            num_of_samples = len(interventions)
-            slider_value_idx = i*int(num_of_samples / NUM_STATIC_INSTANCES)
-            self.set_slider_value(slider_value_idx)
-            ## update widgets and slider of rest static instances
-            for widget in widgets_to_be_linked:
-                i = i + 1
-                if i_type == "atomic":
-                    widget.w_a.value = event.new
-                elif i_type == "shift":
-                    widget.w_s.value = event.new
-                elif i_type == "variance":
-                    widget.w_v.value = event.new
-                slider_value_idx = i*int(num_of_samples / NUM_STATIC_INSTANCES)
-                widget.set_slider_value(slider_value_idx)
+    # ## CALlBACK called in static condition
+    # def sel_var_update_static(self, i_type, widgets_to_be_linked, event):
+    #     """
+    #         i_type: String in {"atomic","shift","variance"}
+    #         widgets_to_be_linked: List of Widget_Single_Matrix objects
+    #     """
+    #     if event.new:
+    #         i = 0
+    #         slider_value_idx = 0
+    #         interventions = None
+    #         if i_type == "atomic":                            
+    #             interventions = self.a_interventions[event.new]
+    #         elif i_type == "shift":
+    #             interventions = self.s_interventions[event.new]
+    #         elif i_type == "variance":
+    #             interventions = self.v_interventions[event.new]
+    #         num_of_samples = len(interventions)
+    #         slider_value_idx = i*int(num_of_samples / NUM_STATIC_INSTANCES)
+    #         self.set_slider_value(slider_value_idx)
+    #         ## update widgets and slider of rest static instances
+    #         for widget in widgets_to_be_linked:
+    #             i = i + 1
+    #             if i_type == "atomic":
+    #                 widget.w_a.value = event.new
+    #             elif i_type == "shift":
+    #                 widget.w_s.value = event.new
+    #             elif i_type == "variance":
+    #                 widget.w_v.value = event.new
+    #             slider_value_idx = i*int(num_of_samples / NUM_STATIC_INSTANCES)
+    #             widget.set_slider_value(slider_value_idx)
 
     ## CALlBACKS called when a radio button is clicked
     def sel_var_update_dag(self, i_type, dag, event):

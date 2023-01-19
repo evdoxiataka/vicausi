@@ -34,9 +34,9 @@ class Causal_DAG():
         self.initialize_plot()
 
     def initialize_plot(self):
-        self.plot = figure(width = 600, height = 250, x_range = (-1.2, 1.2), y_range = (-1.2, 1.2),
-                  x_axis_location = None, y_axis_location = None, toolbar_location = None, background_fill_color = BORDER_COLOR,
-                  title="Causal Model"+" "+str(self.dag_id + 1))##
+        self.plot = figure(width = 300, height = 250, x_range = (-1.2, 1.6), y_range = (-1.1, 1.2),
+                  x_axis_location = None, y_axis_location = None, toolbar_location = None, background_fill_color = None,
+                  title="Causal Model"+" "+str(self.dag_id + 1))##BORDER_COLOR
         self.plot.grid.grid_line_color = None
         self.plot.min_border = 0
         self.plot.title.align = "center"

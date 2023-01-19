@@ -3,6 +3,8 @@ from ..utils.functions import retrieve_intervention_info
 
 from bokeh.plotting import figure
 from bokeh.models import ColumnDataSource
+from bokeh.palettes import Oranges256
+from bokeh.transform import linear_cmap
 
 import numpy as np
 
@@ -46,7 +48,7 @@ class Scatter_Cell():
     def initialize_plot(self):
         ## scatter plot cds
         self.scatter_obs_cds = ColumnDataSource(data = {'x':self.pp_samples1,'y':self.pp_samples2})
-        self.scatter_interv_cds = ColumnDataSource(data = {'x':[],'y':[]})
+        self.scatter_interv_cds = ColumnDataSource(data = {'x':[],'y':[],"group":[]})
         ## pairs of observations
         if self.showData:
             self.data_pairs_cds = ColumnDataSource(data = {'x':self.observations1,'y':self.observations2}) 
@@ -54,11 +56,11 @@ class Scatter_Cell():
         self.plot = figure(width = 400, height = 400, x_range = self.x_range_var1, y_range = self.x_range_var2, tools = [])
         self.plot.xaxis[0].axis_label = self.var1
         self.plot.yaxis[0].axis_label = self.var2
-        self.plot.xaxis.axis_label_text_font_size = "14pt"
-        self.plot.xaxis.major_label_text_font_size = "12pt"
+        self.plot.xaxis.axis_label_text_font_size = "13pt"
+        self.plot.xaxis.major_label_text_font_size = "11pt"
         # self.plot.axis.axis_label_text_font_style = 'bold'
-        self.plot.yaxis.axis_label_text_font_size = "14pt"
-        self.plot.yaxis.major_label_text_font_size = "12pt"
+        self.plot.yaxis.axis_label_text_font_size = "13pt"
+        self.plot.yaxis.major_label_text_font_size = "11pt"
         self.plot.border_fill_color = BORDER_COLOR
         self.plot.min_border = 15
         self.plot.toolbar.logo = None
@@ -66,7 +68,11 @@ class Scatter_Cell():
         self.pp_circle = self.plot.circle('x', 'y', size = 4, color = 'blue', source = self.scatter_obs_cds, fill_alpha = 0.2)
         if self.showData:
             self.obs_circle = self.plot.circle('x', 'y', size = 5, color = '#00CCFF', source = self.data_pairs_cds, fill_alpha = 0.5)
-        self.i_pp_circle = self.plot.circle('x', 'y', size = 4, color = 'orange', source = self.scatter_interv_cds, fill_alpha = 0.2)
+        if self.status not in ['static']:
+            self.i_pp_circle = self.plot.circle('x', 'y', size = 4, color = 'orange', source = self.scatter_interv_cds, fill_alpha = 0.2)
+        else:
+            mapper = linear_cmap(field_name = 'group', palette = Oranges256, low = 0, high = 11)
+            self.i_pp_circle = self.plot.circle('x', 'y', size = 4, color = mapper, source = self.scatter_interv_cds, fill_alpha = 0.2)
         
     def update_plot(self, intervention, i_type):
         """
@@ -99,7 +105,19 @@ class Scatter_Cell():
         self.plot.y_range.start = y_range[0]
         self.plot.y_range.end = y_range[1]
         ## SCATTER CDS
-        self.scatter_interv_cds.data = {'x':np.array(data1).flatten(),"y":np.array(data2).flatten()}##remove np.array 
+        if self.status not in ["static"]:
+            self.scatter_interv_cds.data = {'x':np.array(data1).flatten(),"y":np.array(data2).flatten(),"group":[]}##remove np.array 
+        else:
+            x_list = []
+            y_list = []
+            group_id = []
+            for i in range(len(data1)):
+                x_list.extend(data1[i].flatten())
+                y_list.extend(data2[i].flatten())
+                group_id.extend([i]*len(data1[i].flatten()))
+            self.scatter_interv_cds.data = {'x':np.array(x_list),"y":np.array(y_list),"group":group_id}
+
+
 
     ## SETTERS-GETTERS
     def get_plot(self):
