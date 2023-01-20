@@ -48,12 +48,15 @@ class Scatter_Cell():
     def initialize_plot(self):
         ## scatter plot cds
         self.scatter_obs_cds = ColumnDataSource(data = {'x':self.pp_samples1,'y':self.pp_samples2})
-        self.scatter_interv_cds = ColumnDataSource(data = {'x':[],'y':[],"group":[]})
+        if self.status not in ["static"]:
+            self.scatter_interv_cds = ColumnDataSource(data = {'x':[],'y':[]})
+        else:
+            self.scatter_interv_cds = ColumnDataSource(data = {'x':[],'y':[],"group":[]})
         ## pairs of observations
         if self.showData:
             self.data_pairs_cds = ColumnDataSource(data = {'x':self.observations1,'y':self.observations2}) 
         ## FIGURE and glyphs
-        self.plot = figure(width = 400, height = 400, x_range = self.x_range_var1, y_range = self.x_range_var2, tools = [])
+        self.plot = figure(width = 420, height = 420, x_range = self.x_range_var1, y_range = self.x_range_var2, tools = [])
         self.plot.xaxis[0].axis_label = self.var1
         self.plot.yaxis[0].axis_label = self.var2
         self.plot.xaxis.axis_label_text_font_size = "13pt"
@@ -106,7 +109,7 @@ class Scatter_Cell():
         self.plot.y_range.end = y_range[1]
         ## SCATTER CDS
         if self.status not in ["static"]:
-            self.scatter_interv_cds.data = {'x':np.array(data1).flatten(),"y":np.array(data2).flatten(),"group":[]}##remove np.array 
+            self.scatter_interv_cds.data = {'x':np.array(data1).flatten(),"y":np.array(data2).flatten()}##remove np.array 
         else:
             x_list = []
             y_list = []

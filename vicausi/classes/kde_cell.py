@@ -71,7 +71,7 @@ class KDE_Cell():
             r_data = self.pp_samples.flatten()
             self.rug_obs_cds = ColumnDataSource(data = {'x':r_data,'y':np.asarray([-1*max_v/RUG_DIST_RATIO]*len(r_data)),'size':np.asarray([RUG_SIZE]*len(r_data))})
         ## FIGURE and glyphs
-        self.plot = figure(width = 400, height = 400, x_range = self.x_range, tools = [])#"wheel_zoom,reset,box_zoom"
+        self.plot = figure(width = 420, height = 420, x_range = self.x_range, tools = [])#"wheel_zoom,reset,box_zoom"
         self.plot.xaxis.axis_label_text_font_size = "13pt"
         self.plot.xaxis.major_label_text_font_size = "11pt"
         # self.plot.axis.axis_label_text_font_style = 'bold'
@@ -145,7 +145,7 @@ class KDE_Cell():
                     kde_est = kde(data[i]) 
                     x_list.append(kde_est['x'])
                     y_list.append(kde_est['y'])
-                    print(self.var,kde_est['y'].shape)
+                    # print(self.var,kde_est['y'].shape)
                     group_id.append(i)
                 self.kde_interv_cds.data = {'x':x_list,'y':y_list,'group':group_id} 
         else:

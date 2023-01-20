@@ -1,4 +1,4 @@
-from ..utils.constants import BORDER_COLOR, COLORs, COLORs_sim, BASE_COLOR
+from ..utils.constants import COLORs_sim, BASE_COLOR#BORDER_COLOR, COLORs, 
 
 import networkx as nx
 from bokeh.plotting import figure
@@ -22,7 +22,6 @@ class Causal_DAG():
         if self.mean_obs:
             self.base_color = BASE_COLOR
         else:
-            # self.base_color = COLORs[self.dag_id]
             self.base_color = BASE_COLOR
         ##
         self.plot = None
@@ -35,16 +34,11 @@ class Causal_DAG():
 
     def initialize_plot(self):
         self.plot = figure(width = 300, height = 250, x_range = (-1.2, 1.6), y_range = (-1.1, 1.2),
-                  x_axis_location = None, y_axis_location = None, toolbar_location = None, background_fill_color = None,
+                  x_axis_location = None, y_axis_location = None, toolbar_location = None, background_fill_color = None, outline_line_color = None,
                   title="Causal Model"+" "+str(self.dag_id + 1))##BORDER_COLOR
         self.plot.grid.grid_line_color = None
-        self.plot.min_border = 0
         self.plot.title.align = "center"
-        self.plot.title.text_font_size = "16px"
-        self.plot.title.background_fill_color = '#00000000'
-        self.plot.title.background_fill_alpha = 0
-        self.plot.border_fill_color = '#00000000'
-        self.plot.border_fill_alpha = 0
+        self.plot.title.text_font_size = "18px"
         ##
         graph = self._create_digraph()
         pos = nx.planar_layout(graph)
