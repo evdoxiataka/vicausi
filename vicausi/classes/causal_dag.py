@@ -8,7 +8,7 @@ import panel as pn
 pn.extension()
 
 class Causal_DAG():
-    def __init__(self, data, dag_id, mean_obs = False): # var_order, status, showData = True
+    def __init__(self, data, dag_id, var_order, mean_obs = False): # status, showData = True
         """
             Parameters:
             --------
@@ -18,6 +18,7 @@ class Causal_DAG():
         """
         self.dag_id = dag_id
         self.dag = data.get_dag_by_id(dag_id) ## A Dict(<var>: List of ancestor vars).
+        self.var_order = var_order
         self.mean_obs = mean_obs
         if self.mean_obs:
             self.base_color = BASE_COLOR
@@ -124,7 +125,18 @@ class Causal_DAG():
             dag   A Dict(<var>: List of ancestor vars).
         """
         graph = nx.DiGraph()
-        graph.add_edges_from([(j,i) for i in self.dag for j in self.dag[i]])
+        n_from_keys = list(self.dag.keys())
+        n_from_keys.extend([v for l in self.dag.values() for v in l])
+        graph_nodes = set(n_from_keys)
+        for var in self.var_order:
+            if var in graph_nodes:
+                graph.add_node(var)
+        for n in graph.nodes:
+            if n in self.dag:
+                for n_start in self.dag[n]:
+                    graph.add_edges_from([(n_start, n)])
+                    # graph.add_edges_from([(j,i) for i in self.dag for j in self.dag[i]])
+        print(graph.nodes)
         return graph
     
     ## SETTERS-GETTERS

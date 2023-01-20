@@ -55,7 +55,7 @@ class Demo_Single_Matrix():
         a_interventions, s_interventions, v_interventions = self.data.get_interventions()
         ##    
         causal_dags_ids = self.data.get_causal_dags_ids()
-        causal_dags_obj = [Causal_DAG(self.data, dag_id) for dag_id in causal_dags_ids]
+        causal_dags_obj = [Causal_DAG(self.data, dag_id, self.var_order) for dag_id in causal_dags_ids]
         ## Markdowns
         t_graphs = pn.pane.Markdown('''## Simulated Data of an Unidentified Causal Model''')
         t_dags = pn.pane.Markdown('''## Possible Causal Models''')
