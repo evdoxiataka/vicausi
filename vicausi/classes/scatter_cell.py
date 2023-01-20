@@ -86,27 +86,32 @@ class Scatter_Cell():
         """        
         ##
         i_var, i_value_idx, i_value = retrieve_intervention_info(intervention)
-        samples1 = self.data.get_var_i_samples(i_var, self.var1, self.dag_id, i_type)
-        samples2 = self.data.get_var_i_samples(i_var, self.var2, self.dag_id, i_type)
-        if i_var and samples1 is not None:
-            if self.status == "static":
-                data1 = samples1
-                data2 = samples2
-            else:
-                data1 = samples1[i_value_idx]
-                data2 = samples2[i_value_idx]
-            x_range = self.data.get_var_i_x_range(self.var1, i_var, i_type)
-            y_range = self.data.get_var_i_x_range(self.var2, i_var, i_type)
+        if i_type == "stratify":
+            samples_idx = self.data.get_var_pp_samples_idx(i_var, self.dag_id, i_value[0])
+            data1 = self.pp_samples1.flatten()[samples_idx]
+            data2 = self.pp_samples2.flatten()[samples_idx]
         else:
-            data1 = np.array([])
-            data2 = np.array([])
-            x_range = self.data.get_var_x_range(self.var1)
-            y_range = self.data.get_var_x_range(self.var2)
-        ##
-        self.plot.x_range.start = x_range[0]
-        self.plot.x_range.end = x_range[1]
-        self.plot.y_range.start = y_range[0]
-        self.plot.y_range.end = y_range[1]
+            samples1 = self.data.get_var_i_samples(i_var, self.var1, self.dag_id, i_type)
+            samples2 = self.data.get_var_i_samples(i_var, self.var2, self.dag_id, i_type)
+            if i_var and samples1 is not None:
+                if self.status == "static":
+                    data1 = samples1
+                    data2 = samples2
+                else:
+                    data1 = samples1[i_value_idx]
+                    data2 = samples2[i_value_idx]
+                x_range = self.data.get_var_i_x_range(self.var1, i_var, i_type)
+                y_range = self.data.get_var_i_x_range(self.var2, i_var, i_type)
+            else:
+                data1 = np.array([])
+                data2 = np.array([])
+                x_range = self.data.get_var_x_range(self.var1)
+                y_range = self.data.get_var_x_range(self.var2)
+            ##
+            self.plot.x_range.start = x_range[0]
+            self.plot.x_range.end = x_range[1]
+            self.plot.y_range.start = y_range[0]
+            self.plot.y_range.end = y_range[1]
         ## SCATTER CDS
         if self.status not in ["static"]:
             self.scatter_interv_cds.data = {'x':np.array(data1).flatten(),"y":np.array(data2).flatten()}##remove np.array 

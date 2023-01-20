@@ -16,7 +16,7 @@ import panel as pn
 pn.extension('katex', 'mathjax',raw_css=[css])
 
 class Demo_Single_Matrix():
-    def __init__(self, files, dag_id, var_order, status, interventions, showData = False):
+    def __init__(self, files, dag_id, var_order, status, action_vars, showData = False):
         """
             Parameters:
             --------
@@ -24,18 +24,20 @@ class Demo_Single_Matrix():
                 dag_id: Int index to files list of model id whose scatter matrix will be presented
                 var_order: List of vars given in order to be presented in scatter matrix
                 status: String in {"static","i_value","i_density","i_range", "animated"}
-                interventions: Dict {"<i_type>":List of "i_var"} <i_type> in {"atomic","shift","variance"}
+                action_vars: Dict {"<i_type>":List of "i_var"} <i_type> in {"atomic","shift","variance","stratify"}
                 showData: Boolean to include observations in graphs                
         """
         self.files = files
         self.dag_id = dag_id
         self.var_order = var_order
         self.status = status
-        self.interventions = interventions
+        self.action_vars = action_vars
         self.showData = showData   
         ##
-        self.single_intervention = False
-        self._set_single_intervention()
+        if len(self.action_vars) == 1 and len(list(self.action_vars.values())[0]) == 1:
+            self.single_intervention = True
+        else:
+            self.single_intervention = False
         ##
         self.plot = None
         self.dag_plots = None
@@ -43,17 +45,16 @@ class Demo_Single_Matrix():
         ##
         self.initialize_plot()
 
-    def _set_single_intervention(self):
-        if len(self.interventions) == 1 and len(list(self.interventions.values())[0]) == 1:
-            self.single_intervention = True
-        else:
-            self.single_intervention = False
+    # def _set_single_intervention(self):
+    #     if len(self.action_vars) == 1 and len(list(self.action_vars.values())[0]) == 1:
+    #         self.single_intervention = True
+    #     else:
+    #         self.single_intervention = False
 
-    def initialize_plot(self):
+    def initialize_plot(self): 
         ## Create Data object
-        self.data = Data(self.files)
-        a_interventions, s_interventions, v_interventions = self.data.get_interventions()
-        ##    
+        self.data = Data(self.files)       
+        ## Create DAGs   
         causal_dags_ids = self.data.get_causal_dags_ids()
         causal_dags_obj = [Causal_DAG(self.data, dag_id, self.var_order) for dag_id in causal_dags_ids]
         ## Markdowns
@@ -61,7 +62,8 @@ class Demo_Single_Matrix():
         t_dags = pn.pane.Markdown('''## Possible Causal Models''')
         t_interaction = pn.pane.Markdown('''Select an intervention above to see the simulated data of the intervention.''', style={'font-size': "18px",'margin-bottom': '0px'})
         ## Create Widget object
-        widget = Widget_Single_Matrix(self.status, self.interventions, a_interventions, s_interventions, v_interventions, self.single_intervention)
+        interv_data = self.data.get_interventions(self.dag_id) ## Dict (<itype>: Dict(<var>:List/numpy array of samples))
+        widget = Widget_Single_Matrix(self.status, self.action_vars, {itype:interv_data[itype] for itype in self.action_vars if itype in interv_data})
         ##
         grid_obs = Scatter_Matrix(self.data, self.dag_id, self.var_order, self.status, self.showData)
         ##
@@ -87,14 +89,16 @@ class Demo_Single_Matrix():
             self.plot = pn.Row(pn.Column(t_graphs,pn.Column(*widget_boxes, css_classes=['panel-widget-box']),t_interaction,grids_col), pn.Column(t_dags,*dags_cols))
 
     def _activate_radio_button_if_single_inter(self, widget):  
-        i_type = list(self.interventions.keys())[0]
-        i_var = self.interventions[i_type][0]
+        i_type = list(self.action_vars.keys())[0]
+        i_var = self.action_vars[i_type][0]
         if i_type == "atomic":
             widget.w_a.value = i_var
         elif i_type == "shift":
             widget.w_s.value = i_var
         elif i_type == "variance":
             widget.w_v.value = i_var
+        elif i_type == "stratify":
+            widget.w_str.value = i_var
 
     def get_plot(self):
         return self.plot

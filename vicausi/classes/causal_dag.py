@@ -136,7 +136,6 @@ class Causal_DAG():
                 for n_start in self.dag[n]:
                     graph.add_edges_from([(n_start, n)])
                     # graph.add_edges_from([(j,i) for i in self.dag for j in self.dag[i]])
-        print(graph.nodes)
         return graph
     
     ## SETTERS-GETTERS

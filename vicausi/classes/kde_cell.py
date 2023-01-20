@@ -109,29 +109,33 @@ class KDE_Cell():
             i_type: String in {"atomic", "shift","variance"}
         """ 
         i_var, i_value_idx, i_value = retrieve_intervention_info(intervention)
-        samples = self.data.get_var_i_samples(i_var, self.var, self.dag_id, i_type)
-        if i_var and samples is not None:
-            if self.status in ["i_value","animated"] and self.var == i_var and i_type == "atomic":
-                data = np.array([samples[i_value_idx[0]][0][0][0]])
-                if self.showData:
-                    data_hgh_idx = get_data_hgh_indices(i_value[0], self.data_cds.data['x'], DATA_HGH_NUM)
-            elif self.status == "static":
-                data = samples
-                if self.showData:
-                    data_hgh_idx = []
-            else:
-                data = samples[i_value_idx]
-                if self.showData:
-                    data_hgh_idx = []
-            self.x_range = self.data.get_var_i_x_range(self.var, i_var, i_type)                
+        if i_type == "stratify":
+            samples_idx = self.data.get_var_pp_samples_idx(i_var, self.dag_id, i_value[0])
+            data = self.pp_samples.flatten()[samples_idx]
         else:
-            data = np.array([])
-            self.x_range = self.data.get_var_x_range(self.var)
-            if self.showData:
-                data_hgh_idx = []
-        ##
-        self.plot.x_range.start = self.x_range[0]
-        self.plot.x_range.end = self.x_range[1]
+            samples = self.data.get_var_i_samples(i_var, self.var, self.dag_id, i_type)
+            if i_var and samples is not None:
+                if self.status in ["i_value","animated"] and self.var == i_var and i_type == "atomic":
+                    data = np.array([samples[i_value_idx[0]][0][0][0]])
+                    if self.showData:
+                        data_hgh_idx = get_data_hgh_indices(i_value[0], self.data_cds.data['x'], DATA_HGH_NUM)
+                elif self.status == "static":
+                    data = samples
+                    if self.showData:
+                        data_hgh_idx = []
+                else:
+                    data = samples[i_value_idx]
+                    if self.showData:
+                        data_hgh_idx = []
+                self.x_range = self.data.get_var_i_x_range(self.var, i_var, i_type)                
+            else:
+                data = np.array([])
+                self.x_range = self.data.get_var_x_range(self.var)
+                if self.showData:
+                    data_hgh_idx = []
+            ##
+            self.plot.x_range.start = self.x_range[0]
+            self.plot.x_range.end = self.x_range[1]
         ## KDE CDS
         if self.var_type == "Continuous":
             if self.status not in ["static"]:
@@ -167,12 +171,12 @@ class KDE_Cell():
         if self.var_type == "Continuous":
             self.rug_obs_cds.data = {'x':self.pp_samples.flatten(), 'y':np.asarray([-1*max_v/RUG_DIST_RATIO]*len(self.pp_samples.flatten())),'size':np.asarray([RUG_SIZE]*len(self.pp_samples.flatten()))}    
 
-    # def update_plot_stratification(self, intervention):
+    # def update_plot_stratification(self, intervention, i_type):
     #     """
     #     Parameters:
     #     -----------
     #         intervention: Dict(<i_var>: (value_idx, value))
-    #         i_type: String in {"atomic", "shift","variance"}
+    #         i_type: String in {"atomic", "shift","variance","stratify"}
     #     """ 
     #     i_var, _, i_value = retrieve_intervention_info(intervention)
     #     samples_idx = self.data.get_var_pp_samples_idx(i_var, self.dag_id, i_value)

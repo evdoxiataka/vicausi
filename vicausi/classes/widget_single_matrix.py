@@ -6,27 +6,29 @@ pn.extension()
 
 class Widget_Single_Matrix():
     
-    def __init__(self, status, interventions, a_interventions, s_interventions, v_interventions, is_single_intervention, addToggles = True):
+    def __init__(self, status, action_vars, interventions_data, addToggles = True):
         """
             Parameters:
             --------
-                status           A String within the set {"i_value","static","animated","i_density","i_range"}.
-                a_interventions  A Dict(<var>: List of intervention values)
-                interventions    A Dict(<i_type>: List of <i_var>). Interventions to be included in widgets.
-                is_single_intervention Boolean determines if interventions contain a single intervention
+                status           A String within the set {"i_value","static","animated","i_density","i_range"}. 
+                action_vars      A Dict(<i_type>: List of <i_var>) - Interventions to be included in widgets
+                interventions_data A Dict(<i_type>: Dict(<var>: List of intervention values))
         """
         ##
         self.status = status
-        self.a_interventions = a_interventions
-        self.s_interventions = s_interventions
-        self.v_interventions = v_interventions
-        self.interventions = interventions
-        self.single_intervention = is_single_intervention
+        self.interventions_data = interventions_data
+        self.action_vars = action_vars
         self.addToggles = addToggles
+        ##
+        if len(self.action_vars) == 1 and len(list(self.action_vars.values())[0]) == 1:
+            self.single_intervention = True
+        else:
+            self.single_intervention = False
         ##
         self.w_a = None ## Radio button widget for atomic intervention
         self.w_s = None
         self.w_v = None
+        self.w_str = None ## for stratification
         self.slider = None
         self.no_i_button = None
         if self.addToggles:
@@ -38,41 +40,66 @@ class Widget_Single_Matrix():
         #     self.widget_box.append(pn.Spacer(height=16))
         ##
         if self.status == "i_value":
-            self.slider_titles_map = {"atomic":"Set the value of *","shift":"Set the shift (x) of *'s mean (mean+x)","variance":"Set the divisor (x) of *'s variance (variance/x)"}
+            self.slider_titles_map = {"stratify": "Set the range of *", "atomic":"Set the value of *","shift":"Set the shift (x) of *'s mean (mean+x)","variance":"Set the divisor (x) of *'s variance (variance/x)"}
         else:
             self.slider_titles_map = {"atomic":"The value of * is","shift":"The shift (x) of *'s mean (mean+x) is","variance":"The divisor (x) of *'s variance (variance/x) is"}
         ##
         self.create_widgets()
         self.register_callbacks()
     
+    # def create_widgets_stratify(self):        
+    #     self.w_str = pn.widgets.RadioBoxGroup(name ='varsRadios', options = self.action_vars, inline=True, value = "")
+    #     title = pn.pane.Markdown('''Variables''', style={'font-size': "18px",'margin-bottom': '0px'})
+    #     self.widget_box.append(pn.WidgetBox(title, self.w_str))        
+    #     ## SLIDER 
+    #     if self.status in ["i_value", "animated"]:
+    #         self.slider = Slider(start=0., end=5., value=0., step=1., title = self.slider_titles_map["stratify"], show_value = False, tooltips = False, disabled = True)                
+    #     if self.slider is not None:# and self.status != "animated"
+    #         self.widget_box.append(self.slider)
+    #     ## VIEW BUTTONS
+    #     ## Toggle buttons
+    #     if self.addToggles:
+    #         # self.toggle1 = Toggle(label="Observations", button_type="primary", active=True, background= "green")
+    #         # self.toggle2 = Toggle(label="PP Samples", button_type="primary", active=True, background= "blue")
+    #         self.toggle3 = Toggle(label="Post-Intervention PP Samples", button_type="primary", active=True, background= "orange")
+    #     ## No intervention
+    #     self.no_i_button = pn.widgets.Button(name='Clear Intervention', button_type='primary')
+    #     if self.status not in ["animated"]:
+    #         self.widget_box = [self.no_i_button]+self.widget_box
+
     def create_widgets(self):   
         ## Atomic
-        if "atomic" in self.interventions:       
-            self.w_a = pn.widgets.RadioBoxGroup(name ='varsRadios', options = self.interventions["atomic"], inline=True, value = "")     
+        if "atomic" in self.action_vars:       
+            self.w_a = pn.widgets.RadioBoxGroup(name ='varsRadios', options = self.action_vars["atomic"], inline=True, value = "")     
             if self.single_intervention and self.status == "animated":
                 title = pn.pane.Markdown(''' Click to start the animation ''', style={'font-size': "18px",'margin-bottom': '0px'})
             else:                
                 title = pn.pane.Markdown(''' Atomic Intervention ''', style={'font-size': "18px",'margin-bottom': '0px'})
             self.widget_box.append(pn.WidgetBox(title, self.w_a))
         ## Shift
-        if "shift" in self.interventions:
-            self.w_s = pn.widgets.RadioBoxGroup(name ='varsRadios', options = self.interventions["shift"], inline=True, value = "")
+        if "shift" in self.action_vars:
+            self.w_s = pn.widgets.RadioBoxGroup(name ='varsRadios', options = self.action_vars["shift"], inline=True, value = "")
             if self.single_intervention and self.status == "animated":
                 title = pn.pane.Markdown(''' Click to start the animation ''', style={'font-size': "18px",'margin-bottom': '0px'})
             else:                
                 title = pn.pane.Markdown(''' Shift Intervention ''', style={'font-size': "18px",'margin-bottom': '0px'})
             self.widget_box.append(pn.WidgetBox(title, self.w_s))
         ## Variance
-        if "variance" in self.interventions:
-            self.w_v = pn.widgets.RadioBoxGroup(name ='varsRadios', options = self.interventions["variance"], inline=True, value = "")
+        if "variance" in self.action_vars:
+            self.w_v = pn.widgets.RadioBoxGroup(name ='varsRadios', options = self.action_vars["variance"], inline=True, value = "")
             if self.single_intervention and self.status == "animated":
                 title = pn.pane.Markdown(''' Click to start the animation ''', style={'font-size': "18px",'margin-bottom': '0px'})
             else:                
                 title = pn.pane.Markdown(''' Variance Intervention ''', style={'font-size': "18px",'margin-bottom': '0px'})
             self.widget_box.append(pn.WidgetBox(title, self.w_v))
+        ## Stratify
+        if "stratify" in self.action_vars:
+            self.w_str = pn.widgets.RadioBoxGroup(name ='varsRadios', options = self.action_vars["stratify"], inline=True, value = "")
+            title = pn.pane.Markdown('''Variables''', style={'font-size': "18px",'margin-bottom': '0px'})
+            self.widget_box.append(pn.WidgetBox(title, self.w_str))
         ## SLIDER 
         if self.status in ["i_value", "animated"]:
-            self.slider = Slider(start=0., end=5., value=0., step=1., title = self.slider_titles_map[list(self.interventions.keys())[0]], show_value = False, tooltips = False, disabled = True)                
+            self.slider = Slider(start=0., end=5., value=0., step=1., title = self.slider_titles_map[list(self.action_vars.keys())[0]], show_value = False, tooltips = False, disabled = True)                
         if self.slider is not None:# and self.status != "animated"
             self.widget_box.append(self.slider)
         ## VIEW BUTTONS
@@ -119,6 +146,8 @@ class Widget_Single_Matrix():
                         self.w_s.param.watch(partial(self.sel_var_update_cell, "shift", cell), ['value'], onlychanged=False)
                     if self.w_v:
                         self.w_v.param.watch(partial(self.sel_var_update_cell, "variance", cell), ['value'], onlychanged=False) 
+                    if self.w_str:
+                        self.w_str.param.watch(partial(self.sel_var_update_cell, "stratify", cell), ['value'], onlychanged=False)
                     if self.status in ["i_value", "animated"]:
                         if self.w_a:
                             self.slider.on_change("value", partial(self.sel_value_update_cell, "atomic", cell))
@@ -126,6 +155,8 @@ class Widget_Single_Matrix():
                             self.slider.on_change("value", partial(self.sel_value_update_cell, "shift", cell))
                         if self.w_v:
                             self.slider.on_change("value", partial(self.sel_value_update_cell, "variance", cell))
+                        if self.w_str:
+                            self.slider.on_change("value", partial(self.sel_value_update_cell, "stratify", cell))
                  
     def register_callbacks(self):        
         ## No Intervention button
@@ -145,6 +176,9 @@ class Widget_Single_Matrix():
             self.w_v.param.watch(partial(self.sel_var_update_slider, "variance"), ['value'], onlychanged=False) 
             if self.status == "animated":
                 self.w_v.param.watch(self.sel_var_animation, ['value']) 
+        ## STRATIFY
+        if self.w_str:
+            self.w_str.param.watch(partial(self.sel_var_update_slider, "stratify"), ['value'], onlychanged=False)
         ## slider
         if self.status in ["i_value", "animated"]:
             self.slider.on_change("title", self.set_title)
@@ -154,6 +188,50 @@ class Widget_Single_Matrix():
                 self.slider.on_change("value", partial(self.sel_value_update_slider, "shift"))
             if self.w_v:
                 self.slider.on_change("value", partial(self.sel_value_update_slider, "variance"))   
+            if self.w_str:
+                self.slider.on_change("value", partial(self.sel_value_update_slider, "stratify"))  
+
+    # ## CALLBACKS called when stratify
+    # def sel_var_update_cell_str(self, cell, event):
+    #     """
+    #         cell: A KDE_plot or Scatter_plot object
+    #     """
+    #     if event.new:
+    #         intervention_arg = self._retrieve_intervention_argument(event.new, self.interventions_data)   
+    #         cell.update_plot_stratification(intervention_arg)
+
+    # def sel_var_update_slider_str(self, i_type, event):
+    #     """
+    #         i_type: String in {"atomic","shift","variance"}
+    #     """
+    #     if event.new:
+    #         ##
+    #         self._reset_i_radio_buttons(itype = i_type)
+    #         ##
+    #         self._update_slider(event.new, i_type, self.interventions_data)
+
+    # def sel_value_update_slider(self, i_type, attr, old, new):
+    #     """
+    #         i_type: String in {"atomic","shift","variance"}
+    #     """
+    #     ##
+    #     var = self._retrieve_radio_button_selection(i_type)
+    #     if var:
+    #         interventions = self._retrieve_intervention_values(i_type)
+    #         ##
+    #         if var:
+    #             if self.status in ["i_value", "animated"]:
+    #                 interv_values = interventions[var]
+    #                 self.slider.title = self.slider_titles_map[i_type].replace("*",var)+":"+"{:.2f}".format(interv_values[new])
+                
+    # def sel_value_update_cell(self, i_type, cell, attr, old, new):
+    #     ##
+    #     var = self._retrieve_radio_button_selection(i_type)
+    #     if var:
+    #         interventions = self._retrieve_intervention_values(i_type)
+    #         ##
+    #         intervention_arg = self._retrieve_intervention_argument(var, interventions, [new,None])
+    #         cell.update_plot(intervention_arg, i_type)
 
     ## CALlBACKS called when a radio button is clicked
     def sel_var_update_dag(self, i_type, dag, event):
@@ -171,9 +249,7 @@ class Widget_Single_Matrix():
             cell: A KDE_plot or Scatter_plot object
         """
         if event.new:
-            ##
             interventions = self._retrieve_intervention_values(i_type)
-            ##
             intervention_arg = self._retrieve_intervention_argument(event.new, interventions)   
             cell.update_plot(intervention_arg, i_type)
     
@@ -221,9 +297,9 @@ class Widget_Single_Matrix():
         if event.new:
             ##
             self._reset_i_radio_buttons(itype = i_type)
-            interventions = self._retrieve_intervention_values(i_type)
+            interv_data = self._retrieve_intervention_values(i_type)
             ##
-            self._update_slider(event.new, i_type, interventions)
+            self._update_slider(event.new, i_type, interv_data)
 
     ## CALLBACKs called when a new value is set on slider
     def sel_value_update_slider(self, i_type, attr, old, new):
@@ -233,20 +309,18 @@ class Widget_Single_Matrix():
         ##
         var = self._retrieve_radio_button_selection(i_type)
         if var:
-            interventions = self._retrieve_intervention_values(i_type)
+            interv_data = self._retrieve_intervention_values(i_type)
             ##
             if var:
                 if self.status in ["i_value", "animated"]:
-                    interv_values = interventions[var]
+                    interv_values = interv_data[var]
                     self.slider.title = self.slider_titles_map[i_type].replace("*",var)+":"+"{:.2f}".format(interv_values[new])
                 
     def sel_value_update_cell(self, i_type, cell, attr, old, new):
-        ##
         var = self._retrieve_radio_button_selection(i_type)
         if var:
-            interventions = self._retrieve_intervention_values(i_type)
-            ##
-            intervention_arg = self._retrieve_intervention_argument(var, interventions, [new,None])
+            interv_data = self._retrieve_intervention_values(i_type)
+            intervention_arg = self._retrieve_intervention_argument(var, interv_data, [new,None])
             cell.update_plot(intervention_arg, i_type)
         
     # ## CALLBACKs called when no intervention button is clicked
@@ -267,11 +341,13 @@ class Widget_Single_Matrix():
     ## HELPERs
     def _retrieve_intervention_values(self, itype):
         if itype == "atomic":
-            return self.a_interventions
+            return self.interventions_data["atomic"]
         elif itype == "shift":
-            return self.s_interventions
+            return self.interventions_data["shift"]
         elif itype == "variance":
-            return self.v_interventions
+            return self.interventions_data["variance"]
+        elif itype == "stratify":
+            return self.interventions_data["stratify"]
         else:
             return None
     
@@ -283,8 +359,8 @@ class Widget_Single_Matrix():
             self.slider.end = 5.
             self.slider.step = 1.
             # self.slider.title = "x"
-            # i_type = list(self.interventions.keys())[0]
-            self.slider.title = self.slider_titles_map[list(self.interventions.keys())[0]]
+            # i_type = list(self.action_vars.keys())[0]
+            self.slider.title = self.slider_titles_map[list(self.action_vars.keys())[0]]
             self.slider.value = 0.
             
     def _reset_i_radio_buttons(self, itype = None):
@@ -295,6 +371,8 @@ class Widget_Single_Matrix():
                 self.w_s.value = ""
             if self.w_v:
                 self.w_v.value = ""
+            if self.w_str:
+                self.w_str.value = ""
         elif itype == "atomic":
             if self.w_s:
                 self.w_s.value = ""
@@ -318,6 +396,8 @@ class Widget_Single_Matrix():
             return self.w_s.value
         elif itype == "variance":
             return self.w_v.value
+        elif itype == "stratify":
+            return self.w_str.value
         else:
             return None
     
@@ -339,15 +419,15 @@ class Widget_Single_Matrix():
             self.slider.title = self.slider_titles_map[i_type].replace("*",var)+":"+"{:.2f}".format(interv_values[0])
             self.slider.value = 0
     
-    def _retrieve_intervention_argument(self, var, interventions, value_idx = [0,None]):
+    def _retrieve_intervention_argument(self, var, intervention_data, value_idx = [0,None]):
         intervention_arg = None
         if value_idx[1] is None:
-            value_idx[1] = len(interventions)
+            value_idx[1] = len(intervention_data)
         if self.status == "i_value":
-            interv_values = interventions[var] 
+            interv_values = intervention_data[var] 
             intervention_arg = {var:{"i_value_idx":[value_idx[0]],"i_value":[interv_values[value_idx[0]]]}}
         elif self.status == "animated":
-            interv_values = interventions[var]
+            interv_values = intervention_data[var]
             intervention_arg = {var:{"i_value_idx":[value_idx[0]],"i_value":[interv_values[value_idx[0]]]}}
         elif self.status == "static":
             intervention_arg = {var:{}}

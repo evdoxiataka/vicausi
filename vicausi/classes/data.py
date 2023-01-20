@@ -171,8 +171,10 @@ class Data():
                 self.causal_inference['x_range']['iv_samples'][i_var][var] = (var_min-x_range_mag*abs(var_max-var_min),var_max+x_range_mag*abs(var_max-var_min))
 
     ## GETTERS-SETTERS
-    def get_interventions(self):
-        return self.atomic_interventions, self.shift_interventions, self.variance_interventions
+    def get_interventions(self, dag_id):
+        pp_samples = self.causal_inference['dags'][dag_id]['pp_samples']
+        str_inter_data = {var: np.arange(min(pp_samples[var].flatten()),max(pp_samples[var].flatten()),(max(pp_samples[var].flatten())-min(pp_samples[var].flatten())+1)/len(self.atomic_interventions[var])).tolist() for var in pp_samples}
+        return {"atomic":self.atomic_interventions, "shift":self.shift_interventions, "variance":self.variance_interventions,"stratify":str_inter_data}
     
     def get_causal_dags_ids(self):
          return [i for i in self.causal_inference['dags']]
@@ -204,8 +206,8 @@ class Data():
     def get_var_pp_samples_idx(self, var, dag_id, window_median): 
         if var in self.causal_inference['dags'][dag_id]['pp_samples']:
             pp_samples = self.causal_inference['dags'][dag_id]['pp_samples'][var].flatten()
-            window_min = window_median - stratification_window_magn*window_median
-            window_max = window_median + stratification_window_magn*window_median
+            window_min = window_median - stratification_window_magn*abs(window_median)
+            window_max = window_median + stratification_window_magn*abs(window_median)
             return np.where((pp_samples > window_min) & (pp_samples < window_max))
         else:
             return None
