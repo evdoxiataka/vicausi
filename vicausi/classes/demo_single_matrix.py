@@ -32,13 +32,22 @@ class Demo_Single_Matrix():
         self.var_order = var_order
         self.status = status
         self.interventions = interventions
-        self.showData = showData        
+        self.showData = showData   
+        ##
+        self.single_intervention = False
+        self._set_single_intervention()
         ##
         self.plot = None
         self.dag_plots = None
         self.data = None
         ##
         self.initialize_plot()
+
+    def _set_single_intervention(self):
+        if len(self.interventions) == 1 and len(list(self.interventions.values())[0]) == 1:
+            self.single_intervention = True
+        else:
+            self.single_intervention = False
 
     def initialize_plot(self):
         ## Create Data object
@@ -52,7 +61,7 @@ class Demo_Single_Matrix():
         t_dags = pn.pane.Markdown('''## Possible Causal Models''')
         t_interaction = pn.pane.Markdown('''Select an intervention above to see the simulated data of the intervention.''', style={'font-size': "18px",'margin-bottom': '0px'})
         ## Create Widget object
-        widget = Widget_Single_Matrix(self.status, self.interventions, a_interventions, s_interventions, v_interventions)
+        widget = Widget_Single_Matrix(self.status, self.interventions, a_interventions, s_interventions, v_interventions, self.single_intervention)
         ##
         grid_obs = Scatter_Matrix(self.data, self.dag_id, self.var_order, self.status, self.showData)
         ##
@@ -64,10 +73,14 @@ class Demo_Single_Matrix():
             grids_col = pn.Column(pn.Column(widget.slider, css_classes=['panel-widget-box']), grid_obs.get_grid())
         else:
             grids_col = pn.Column(grid_obs.get_grid())
-        if len(self.interventions) == 1 and len(list(self.interventions.values())[0]) == 1:
-            self._activate_radio_button_if_single_inter(widget)
-            ## PLOT                
-            self.plot = pn.Row(pn.Column(t_graphs, grids_col), pn.Column(t_dags,*dags_cols))
+        if self.single_intervention:            
+            ## PLOT
+            if self.status not in ["animated"]:  
+                self._activate_radio_button_if_single_inter(widget)                              
+                self.plot = pn.Row(pn.Column(t_graphs, widget.toggle3, grids_col), pn.Column(t_dags,*dags_cols))
+            else:
+                widget_boxes = widget.get_widget_box_without_slider() 
+                self.plot = pn.Row(pn.Column(t_graphs,pn.Column(*widget_boxes, css_classes=['panel-widget-box']), grids_col), pn.Column(t_dags,*dags_cols))
         else:                
             ## PLOT
             widget_boxes = widget.get_widget_box_without_slider()                

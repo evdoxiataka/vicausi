@@ -19,8 +19,6 @@ class Scatter_Matrix():
         self.dag = data.get_dag_by_id(dag_id) ## A Dict(<var>: List of ancestor vars).
         self.var_order = var_order
         self.status = status
-        # if status == "static":
-        #     self.status = "i_value"
         self.showData = showData
         ##
         self.grid = None

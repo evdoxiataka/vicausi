@@ -1,37 +1,43 @@
 from functools import partial
-from bokeh.models import Slider
+from bokeh.models import Slider, Toggle
 import asyncio
 import panel as pn
 pn.extension()
 
 class Widget_Single_Matrix():
     
-    def __init__(self, status, interventions, a_interventions, s_interventions, v_interventions):
+    def __init__(self, status, interventions, a_interventions, s_interventions, v_interventions, is_single_intervention, addToggles = True):
         """
             Parameters:
             --------
                 status           A String within the set {"i_value","static","animated","i_density","i_range"}.
                 a_interventions  A Dict(<var>: List of intervention values)
                 interventions    A Dict(<i_type>: List of <i_var>). Interventions to be included in widgets.
+                is_single_intervention Boolean determines if interventions contain a single intervention
         """
         ##
-        self.status_extern = status
         self.status = status
         self.a_interventions = a_interventions
         self.s_interventions = s_interventions
         self.v_interventions = v_interventions
         self.interventions = interventions
+        self.single_intervention = is_single_intervention
+        self.addToggles = addToggles
         ##
         self.w_a = None ## Radio button widget for atomic intervention
         self.w_s = None
         self.w_v = None
         self.slider = None
         self.no_i_button = None
+        if self.addToggles:
+            # self.toggle1 = None ## toggle button for observations
+            # self.toggle2 = None ## toggle button for posterior predictive samples
+            self.toggle3 = None ## toggle button for after intervention samples
         self.widget_box = []
-        if self.status == "animated":
-            self.widget_box.append(pn.Spacer(height=16))
+        # if self.status == "animated":
+        #     self.widget_box.append(pn.Spacer(height=16))
         ##
-        if self.status_extern == "i_value":
+        if self.status == "i_value":
             self.slider_titles_map = {"atomic":"Set the value of *","shift":"Set the shift (x) of *'s mean (mean+x)","variance":"Set the divisor (x) of *'s variance (variance/x)"}
         else:
             self.slider_titles_map = {"atomic":"The value of * is","shift":"The shift (x) of *'s mean (mean+x) is","variance":"The divisor (x) of *'s variance (variance/x) is"}
@@ -41,19 +47,28 @@ class Widget_Single_Matrix():
     
     def create_widgets(self):   
         ## Atomic
-        if "atomic" in self.interventions:
-            self.w_a = pn.widgets.RadioBoxGroup(name ='varsRadios', options = self.interventions["atomic"], inline=True, value = "")
-            title = pn.pane.Markdown(''' Atomic Intervention ''', style={'font-size': "18px",'margin-bottom': '0px'})
+        if "atomic" in self.interventions:       
+            self.w_a = pn.widgets.RadioBoxGroup(name ='varsRadios', options = self.interventions["atomic"], inline=True, value = "")     
+            if self.single_intervention and self.status == "animated":
+                title = pn.pane.Markdown(''' Click to start the animation ''', style={'font-size': "18px",'margin-bottom': '0px'})
+            else:                
+                title = pn.pane.Markdown(''' Atomic Intervention ''', style={'font-size': "18px",'margin-bottom': '0px'})
             self.widget_box.append(pn.WidgetBox(title, self.w_a))
         ## Shift
         if "shift" in self.interventions:
             self.w_s = pn.widgets.RadioBoxGroup(name ='varsRadios', options = self.interventions["shift"], inline=True, value = "")
-            title = pn.pane.Markdown(''' Shift Intervention''', style={'font-size': "18px",'margin-bottom': '0px'})
+            if self.single_intervention and self.status == "animated":
+                title = pn.pane.Markdown(''' Click to start the animation ''', style={'font-size': "18px",'margin-bottom': '0px'})
+            else:                
+                title = pn.pane.Markdown(''' Shift Intervention ''', style={'font-size': "18px",'margin-bottom': '0px'})
             self.widget_box.append(pn.WidgetBox(title, self.w_s))
         ## Variance
         if "variance" in self.interventions:
             self.w_v = pn.widgets.RadioBoxGroup(name ='varsRadios', options = self.interventions["variance"], inline=True, value = "")
-            title = pn.pane.Markdown(''' Variance Intervention ''', style={'font-size': "18px",'margin-bottom': '0px'})
+            if self.single_intervention and self.status == "animated":
+                title = pn.pane.Markdown(''' Click to start the animation ''', style={'font-size': "18px",'margin-bottom': '0px'})
+            else:                
+                title = pn.pane.Markdown(''' Variance Intervention ''', style={'font-size': "18px",'margin-bottom': '0px'})
             self.widget_box.append(pn.WidgetBox(title, self.w_v))
         ## SLIDER 
         if self.status in ["i_value", "animated"]:
@@ -61,8 +76,15 @@ class Widget_Single_Matrix():
         if self.slider is not None:# and self.status != "animated"
             self.widget_box.append(self.slider)
         ## VIEW BUTTONS
+        ## Toggle buttons
+        if self.addToggles:
+            # self.toggle1 = Toggle(label="Observations", button_type="primary", active=True, background= "green")
+            # self.toggle2 = Toggle(label="PP Samples", button_type="primary", active=True, background= "blue")
+            self.toggle3 = Toggle(label="Post-Intervention PP Samples", button_type="primary", active=True, background= "orange")
         ## No intervention
         self.no_i_button = pn.widgets.Button(name='Clear Intervention', button_type='primary')
+        if self.status not in ["animated"]:
+            self.widget_box = [self.no_i_button]+self.widget_box
 
     def register_callbacks_to_dags(self, dags):
         """
@@ -88,6 +110,8 @@ class Widget_Single_Matrix():
         for grid in grids:
             for var in grid.cells:
                 for cell in grid.cells[var]:
+                    if self.addToggles:
+                        self._link_buttons_with_glyphs(var, cell)  
                     self.no_i_button.on_click(partial(self.no_interv_update_cell,cell))
                     if self.w_a:
                         self.w_a.param.watch(partial(self.sel_var_update_cell, "atomic", cell), ['value'], onlychanged=False) 
@@ -328,7 +352,33 @@ class Widget_Single_Matrix():
         elif self.status == "static":
             intervention_arg = {var:{}}
         return intervention_arg
-            
+    
+    def _link_buttons_with_glyphs(self, var, cell):
+        if "$" in var:##scatter plot
+            pp_circle, obs_circle, i_pp_circle = cell.get_glyphs()
+            # if obs_circle is not None:
+            #     self.toggle1.js_link('active', obs_circle, 'visible')
+            # if pp_circle is not None:
+            #     self.toggle2.js_link('active', pp_circle, 'visible')
+            if i_pp_circle is not None:
+                self.toggle3.js_link('active', i_pp_circle, 'visible')
+        else:## kde plot
+            pp_line, i_pp_line, pp_scat, i_pp_scat, obs_left, obs_hghl, rug = cell.get_glyphs()
+            # if pp_line is not None:
+            #     self.toggle2.js_link('active', pp_line, 'visible')
+            if i_pp_line is not None:
+                self.toggle3.js_link('active', i_pp_line, 'visible')
+            # if pp_scat is not None:
+            #     self.toggle2.js_link('active', pp_scat, 'visible')
+            if i_pp_scat is not None:
+                self.toggle3.js_link('active', i_pp_scat, 'visible')
+            # if obs_left is not None:
+            #     self.toggle1.js_link('active', obs_left, 'visible')
+            # if obs_hghl is not None:
+            #     self.toggle1.js_link('active', obs_hghl, 'visible')
+            # if rug is not None:
+            #     self.toggle2.js_link('active', rug, 'visible')
+
     ## SETTERS - GETTERS
     def set_slider_value(self, i_value_idx):
         self.slider.disabled = False

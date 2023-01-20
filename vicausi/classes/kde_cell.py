@@ -142,29 +142,30 @@ class KDE_Cell():
                 y_list = []
                 group_id = []
                 for i in range(len(data)):
-                    kde_est = kde(data[i]) 
+                    if self.var == i_var and i_type == "atomic":
+                        kde_est = kde(np.array([data[i][0][0][0]])) 
+                    else:
+                        kde_est = kde(data[i])
                     x_list.append(kde_est['x'])
                     y_list.append(kde_est['y'])
-                    # print(self.var,kde_est['y'].shape)
                     group_id.append(i)
                 self.kde_interv_cds.data = {'x':x_list,'y':y_list,'group':group_id} 
         else:
             kde_est = pmf(data) 
             self.kde_interv_cds.data = {'x':kde_est['x'], 'y':kde_est['y'], 'y0':kde_est['y0']} 
         ## OBSERVATIONS CDS
-        # print(self.var, (self.kde_obs_cds.data['y'], np.array(self.kde_interv_cds.data['y']).flatten()))
-        # max_v = np.concatenate((self.kde_obs_cds.data['y'], np.array(self.kde_interv_cds.data['y']).flatten()), axis=None).max()
-        # if self.showData:
-        #     data_obs = self.data_cds.data['x']
-        #     if len(data_hgh_idx) == 0:
-        #         data_idx = [i for i in range(len(data_obs))]
-        #     else:
-        #         data_idx = [i for i in range(len(data_obs)) if i not in data_hgh_idx]
-        #     self.data_cds_left.data = {'x':data_obs[data_idx], 'y':np.asarray([-1*max_v/DATA_DIST_RATIO]*len(data_idx))}
-        #     self.data_cds_hghl.data = {'x':data_obs[data_hgh_idx], 'y':np.asarray([-1*max_v/DATA_DIST_RATIO]*len(data_hgh_idx))}
-        # ## RUG CDS
-        # if self.var_type == "Continuous":
-        #     self.rug_obs_cds.data = {'x':self.pp_samples.flatten(), 'y':np.asarray([-1*max_v/RUG_DIST_RATIO]*len(self.pp_samples.flatten())),'size':np.asarray([RUG_SIZE]*len(self.pp_samples.flatten()))}    
+        max_v = np.concatenate((self.kde_obs_cds.data['y'], np.array(self.kde_interv_cds.data['y']).flatten()), axis=None).max()
+        if self.showData:
+            data_obs = self.data_cds.data['x']
+            if len(data_hgh_idx) == 0:
+                data_idx = [i for i in range(len(data_obs))]
+            else:
+                data_idx = [i for i in range(len(data_obs)) if i not in data_hgh_idx]
+            self.data_cds_left.data = {'x':data_obs[data_idx], 'y':np.asarray([-1*max_v/DATA_DIST_RATIO]*len(data_idx))}
+            self.data_cds_hghl.data = {'x':data_obs[data_hgh_idx], 'y':np.asarray([-1*max_v/DATA_DIST_RATIO]*len(data_hgh_idx))}
+        ## RUG CDS
+        if self.var_type == "Continuous":
+            self.rug_obs_cds.data = {'x':self.pp_samples.flatten(), 'y':np.asarray([-1*max_v/RUG_DIST_RATIO]*len(self.pp_samples.flatten())),'size':np.asarray([RUG_SIZE]*len(self.pp_samples.flatten()))}    
 
     # def update_plot_stratification(self, intervention):
     #     """
