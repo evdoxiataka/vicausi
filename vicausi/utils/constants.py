@@ -14,7 +14,7 @@ pp_samples = 20
 sim_i_pp_samples = 6
 
 ##
-stratification_window_magn = 0.1
+stratification_window_magn = 0.2
 
 ## KDE plots' constants
 DATA_SIZE = 6

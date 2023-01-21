@@ -46,26 +46,6 @@ class Widget_Single_Matrix():
         ##
         self.create_widgets()
         self.register_callbacks()
-    
-    # def create_widgets_stratify(self):        
-    #     self.w_str = pn.widgets.RadioBoxGroup(name ='varsRadios', options = self.action_vars, inline=True, value = "")
-    #     title = pn.pane.Markdown('''Variables''', style={'font-size': "18px",'margin-bottom': '0px'})
-    #     self.widget_box.append(pn.WidgetBox(title, self.w_str))        
-    #     ## SLIDER 
-    #     if self.status in ["i_value", "animated"]:
-    #         self.slider = Slider(start=0., end=5., value=0., step=1., title = self.slider_titles_map["stratify"], show_value = False, tooltips = False, disabled = True)                
-    #     if self.slider is not None:# and self.status != "animated"
-    #         self.widget_box.append(self.slider)
-    #     ## VIEW BUTTONS
-    #     ## Toggle buttons
-    #     if self.addToggles:
-    #         # self.toggle1 = Toggle(label="Observations", button_type="primary", active=True, background= "green")
-    #         # self.toggle2 = Toggle(label="PP Samples", button_type="primary", active=True, background= "blue")
-    #         self.toggle3 = Toggle(label="Post-Intervention PP Samples", button_type="primary", active=True, background= "orange")
-    #     ## No intervention
-    #     self.no_i_button = pn.widgets.Button(name='Clear Intervention', button_type='primary')
-    #     if self.status not in ["animated"]:
-    #         self.widget_box = [self.no_i_button]+self.widget_box
 
     def create_widgets(self):   
         ## Atomic
@@ -107,7 +87,10 @@ class Widget_Single_Matrix():
         if self.addToggles:
             # self.toggle1 = Toggle(label="Observations", button_type="primary", active=True, background= "green")
             # self.toggle2 = Toggle(label="PP Samples", button_type="primary", active=True, background= "blue")
-            self.toggle3 = Toggle(label="Post-Intervention PP Samples", button_type="primary", active=True, background= "orange")
+            if "stratify" in self.action_vars:
+                self.toggle3 = Toggle(label="Hide Stratification", button_type="primary", active=True, background= "orange")
+            else:
+                self.toggle3 = Toggle(label="Hide Simulated Interventions", button_type="primary", active=True, background= "orange")
         ## No intervention
         self.no_i_button = pn.widgets.Button(name='Clear Intervention', button_type='primary')
         if self.status not in ["animated"]:
@@ -190,50 +173,18 @@ class Widget_Single_Matrix():
                 self.slider.on_change("value", partial(self.sel_value_update_slider, "variance"))   
             if self.w_str:
                 self.slider.on_change("value", partial(self.sel_value_update_slider, "stratify"))  
+        ## toggle
+        self.toggle3.on_click(self.changeToggleLabel)
+        self.toggle3.on_change("label",self.set_title)
+    
+    ## CALLBACKS called when toggle3 is clicked 
+    def changeToggleLabel(self, event):
+        if "Hide" in self.toggle3.label:
+            self.toggle3.label = self.toggle3.label.replace("Hide", "Show")
+        elif "Show" in self.toggle3.label:
+            self.toggle3.label = self.toggle3.label.replace("Show", "Hide")
 
-    # ## CALLBACKS called when stratify
-    # def sel_var_update_cell_str(self, cell, event):
-    #     """
-    #         cell: A KDE_plot or Scatter_plot object
-    #     """
-    #     if event.new:
-    #         intervention_arg = self._retrieve_intervention_argument(event.new, self.interventions_data)   
-    #         cell.update_plot_stratification(intervention_arg)
-
-    # def sel_var_update_slider_str(self, i_type, event):
-    #     """
-    #         i_type: String in {"atomic","shift","variance"}
-    #     """
-    #     if event.new:
-    #         ##
-    #         self._reset_i_radio_buttons(itype = i_type)
-    #         ##
-    #         self._update_slider(event.new, i_type, self.interventions_data)
-
-    # def sel_value_update_slider(self, i_type, attr, old, new):
-    #     """
-    #         i_type: String in {"atomic","shift","variance"}
-    #     """
-    #     ##
-    #     var = self._retrieve_radio_button_selection(i_type)
-    #     if var:
-    #         interventions = self._retrieve_intervention_values(i_type)
-    #         ##
-    #         if var:
-    #             if self.status in ["i_value", "animated"]:
-    #                 interv_values = interventions[var]
-    #                 self.slider.title = self.slider_titles_map[i_type].replace("*",var)+":"+"{:.2f}".format(interv_values[new])
-                
-    # def sel_value_update_cell(self, i_type, cell, attr, old, new):
-    #     ##
-    #     var = self._retrieve_radio_button_selection(i_type)
-    #     if var:
-    #         interventions = self._retrieve_intervention_values(i_type)
-    #         ##
-    #         intervention_arg = self._retrieve_intervention_argument(var, interventions, [new,None])
-    #         cell.update_plot(intervention_arg, i_type)
-
-    ## CALlBACKS called when a radio button is clicked
+    ## CALLBACKS called when a radio button is clicked
     def sel_var_update_dag(self, i_type, dag, event):
         """
         Parameters:

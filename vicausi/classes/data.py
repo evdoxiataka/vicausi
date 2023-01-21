@@ -206,8 +206,9 @@ class Data():
     def get_var_pp_samples_idx(self, var, dag_id, window_median): 
         if var in self.causal_inference['dags'][dag_id]['pp_samples']:
             pp_samples = self.causal_inference['dags'][dag_id]['pp_samples'][var].flatten()
-            window_min = window_median - stratification_window_magn*abs(window_median)
-            window_max = window_median + stratification_window_magn*abs(window_median)
+            offset = stratification_window_magn*(max(pp_samples) - min(pp_samples))/2
+            window_min = window_median - abs(offset)
+            window_max = window_median + abs(offset)
             return np.where((pp_samples > window_min) & (pp_samples < window_max))
         else:
             return None
