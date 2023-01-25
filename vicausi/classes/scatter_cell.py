@@ -3,7 +3,8 @@ from ..utils.functions import retrieve_intervention_info
 
 from bokeh.plotting import figure
 from bokeh.models import ColumnDataSource
-from bokeh.palettes import Oranges256
+from bokeh.palettes import Oranges256, Magma256, Viridis256, Turbo256
+import colorcet as cc
 from bokeh.transform import linear_cmap
 
 import numpy as np
@@ -68,14 +69,15 @@ class Scatter_Cell():
         self.plot.min_border = 15
         self.plot.toolbar.logo = None
         ## SCATTER PLOT
-        self.pp_circle = self.plot.circle('x', 'y', size = 4, color = 'blue', source = self.scatter_obs_cds, fill_alpha = 0.2)
+        self.pp_circle = self.plot.circle('x', 'y', size = 2.5, color = 'blue', source = self.scatter_obs_cds, fill_alpha = 1, line_alpha =0.2)
         if self.showData:
-            self.obs_circle = self.plot.circle('x', 'y', size = 5, color = '#00CCFF', source = self.data_pairs_cds, fill_alpha = 0.5)
+            self.obs_circle = self.plot.circle('x', 'y', size = 5, color = '#00CCFF', source = self.data_pairs_cds, fill_alpha = 0.5, line_alpha =0.5)
         if self.status not in ['static']:
-            self.i_pp_circle = self.plot.circle('x', 'y', size = 4, color = 'orange', source = self.scatter_interv_cds, fill_alpha = 0.2)
+            self.i_pp_circle = self.plot.circle('x', 'y', size = 2.5, color = 'orange', source = self.scatter_interv_cds, fill_alpha = 1, line_alpha =0.2)
         else:
-            mapper = linear_cmap(field_name = 'group', palette = Oranges256, low = 0, high = 11)
-            self.i_pp_circle = self.plot.circle('x', 'y', size = 4, color = mapper, source = self.scatter_interv_cds, fill_alpha = 0.2)
+            # mapper = linear_cmap(field_name = 'group', palette = Oranges256, low = 0, high = 8)
+            self.mapper = linear_cmap(field_name = 'group', palette = cc.b_rainbow_bgyrm_35_85_c69[29:], low = 0, high = 4)#cc.b_rainbow_bgyrm_35_85_c69
+            self.i_pp_circle = self.plot.circle('x', 'y', size = 2.5, color = self.mapper, source = self.scatter_interv_cds, fill_alpha = 1, line_alpha =0.2)
         
     def update_plot(self, intervention, i_type):
         """
@@ -95,9 +97,19 @@ class Scatter_Cell():
             samples2 = self.data.get_var_i_samples(i_var, self.var2, self.dag_id, i_type)
             if i_var and samples1 is not None:
                 if self.status == "static":
-                    data1 = samples1
-                    data2 = samples2
+                    data1 = samples1[[*range(0,len(samples1),int(len(samples1)/5))]]
+                    data2 = samples2[[*range(0,len(samples2),int(len(samples2)/5))]]
                 else:
+                    # i_idx = i_value_idx[0]
+                    # i_idx_min = i_idx
+                    # i_idx_max = i_idx
+                    # if i_idx - 1 >= 0:
+                    #     i_idx_min = i_idx - 1
+                    # if i_idx + 1 < len(samples1):
+                    #     i_idx_max = i_idx + 2
+                    # data1 = samples1[[*range(i_idx_min, i_idx_max, 1)]]
+                    # data2 = samples2[[*range(i_idx_min, i_idx_max, 1)]]
+                    print(self.var1,self.var2,i_value_idx)
                     data1 = samples1[i_value_idx]
                     data2 = samples2[i_value_idx]
                 x_range = self.data.get_var_i_x_range(self.var1, i_var, i_type)
@@ -115,6 +127,9 @@ class Scatter_Cell():
         ## SCATTER CDS
         if self.status not in ["static"]:
             self.scatter_interv_cds.data = {'x':np.array(data1).flatten(),"y":np.array(data2).flatten()}##remove np.array 
+            if len(data1):
+                self.mapper['transform'].low = self.scatter_interv_cds.data["x"].min()
+                self.mapper['transform'].high = self.scatter_interv_cds.data["x"].max()
         else:
             x_list = []
             y_list = []

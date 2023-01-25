@@ -68,7 +68,7 @@ class Widget_Single_Matrix():
         if "variance" in self.action_vars:
             self.w_v = pn.widgets.RadioBoxGroup(name ='varsRadios', options = self.action_vars["variance"], inline=True, value = "")
             if self.single_intervention and self.status == "animated":
-                title = pn.pane.Markdown(''' Click to start the animation ''', style={'font-size': "18px",'margin-bottom': '0px'})
+                title = pn.pane.Markdown(''' Select the variable below to start the animation ''', style={'font-size': "18px",'margin-bottom': '0px'})
             else:                
                 title = pn.pane.Markdown(''' Variance Intervention ''', style={'font-size': "18px",'margin-bottom': '0px'})
             self.widget_box.append(pn.WidgetBox(title, self.w_v))
@@ -77,12 +77,7 @@ class Widget_Single_Matrix():
             self.w_str = pn.widgets.RadioBoxGroup(name ='varsRadios', options = self.action_vars["stratify"], inline=True, value = "")
             title = pn.pane.Markdown('''Variables''', style={'font-size': "18px",'margin-bottom': '0px'})
             self.widget_box.append(pn.WidgetBox(title, self.w_str))
-        ## SLIDER 
-        if self.status in ["i_value", "animated"]:
-            self.slider = Slider(start=0., end=5., value=0., step=1., title = self.slider_titles_map[list(self.action_vars.keys())[0]], show_value = False, tooltips = False, disabled = True)                
-        if self.slider is not None:# and self.status != "animated"
-            self.widget_box.append(self.slider)
-        ## VIEW BUTTONS
+        ## WIDGETS
         ## Toggle buttons
         if self.addToggles:
             # self.toggle1 = Toggle(label="Observations", button_type="primary", active=True, background= "green")
@@ -93,8 +88,13 @@ class Widget_Single_Matrix():
                 self.toggle3 = Toggle(label="Hide Simulated Interventions", button_type="primary", active=True, background= "orange")
         ## No intervention
         self.no_i_button = pn.widgets.Button(name='Clear Intervention', button_type='primary')
-        if self.status not in ["animated"]:
-            self.widget_box = [self.no_i_button]+self.widget_box
+        # if self.status not in ["animated"]:
+        #     self.widget_box = self.widget_box+[self.no_i_button]
+        ## SLIDER 
+        if self.status in ["i_value", "animated"]:
+            self.slider = Slider(start=0., end=5., value=0., step=1., title = self.slider_titles_map[list(self.action_vars.keys())[0]], show_value = False, tooltips = False, disabled = True)                
+        # if self.slider is not None:# and self.status != "animated"
+        #     self.widget_box.append(self.slider)
 
     def register_callbacks_to_dags(self, dags):
         """

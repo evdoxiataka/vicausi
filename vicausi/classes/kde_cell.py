@@ -3,7 +3,8 @@ from ..utils.constants import DATA_SIZE, DATA_DIST_RATIO, RUG_DIST_RATIO, RUG_SI
 
 from bokeh.plotting import figure
 from bokeh.models import ColumnDataSource
-from bokeh.palettes import Oranges256
+from bokeh.palettes import Oranges256, Magma256, Viridis256, Turbo256
+import colorcet as cc
 from bokeh.transform import linear_cmap
 
 import numpy as np
@@ -86,7 +87,8 @@ class KDE_Cell():
             if self.status not in ['static']:
                 self.i_pp_line = self.plot.line(x='x', y='y', line_width=2, line_color = 'orange', source = self.kde_interv_cds)
             else:
-                mapper = linear_cmap(field_name = 'group', palette = Oranges256, low = 0, high = 11)
+                # mapper = linear_cmap(field_name = 'group', palette = Oranges256, low = 0, high = 11)
+                mapper = linear_cmap(field_name = 'group', palette = cc.b_rainbow_bgyrm_35_85_c69[29:], low = 0, high = 4)
                 self.i_pp_line = self.plot.multi_line(xs='x', ys='y', line_width=2, line_color = mapper, source = self.kde_interv_cds)
         else:
             self.pp_line = self.plot.segment(x0 = 'x', y0 ='y0', x1 = 'x', y1 = 'y', source = self.kde_obs_cds, line_alpha = 1.0, color = "blue", line_width = 1)
@@ -116,11 +118,19 @@ class KDE_Cell():
             samples = self.data.get_var_i_samples(i_var, self.var, self.dag_id, i_type)
             if i_var and samples is not None:
                 if self.status in ["i_value","animated"] and self.var == i_var and i_type == "atomic":
+                    # i_idx = i_value_idx[0]
+                    # i_idx_min = i_idx
+                    # i_idx_max = i_idx
+                    # if i_idx - 1 >= 0:
+                    #     i_idx_min = i_idx - 1
+                    # if i_idx + 1 < len(samples):
+                    #     i_idx_max = i_idx + 2
+                    # data = np.array([samples[[[*range(i_idx_min, i_idx_max, 1)]]][0][0][0]])
                     data = np.array([samples[i_value_idx[0]][0][0][0]])
                     if self.showData:
                         data_hgh_idx = get_data_hgh_indices(i_value[0], self.data_cds.data['x'], DATA_HGH_NUM)
                 elif self.status == "static":
-                    data = samples
+                    data = samples[[*range(0,len(samples),int(len(samples)/5))]]
                     if self.showData:
                         data_hgh_idx = []
                 else:

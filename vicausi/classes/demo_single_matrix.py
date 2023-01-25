@@ -79,15 +79,17 @@ class Demo_Single_Matrix():
             ## PLOT
             if self.status not in ["animated"]:  
                 self._activate_radio_button_if_single_inter(widget)                              
-                self.plot = pn.Row(pn.Column(t_graphs, widget.toggle3, grids_col), pn.Column(t_dags,*dags_cols))
+                self.plot = pn.Row(pn.Column(t_graphs, grids_col, widget.toggle3), pn.Column(t_dags,*dags_cols))
             else:
-                widget_boxes = widget.get_widget_box_without_slider() 
+                widget_boxes = widget.get_widget_box() 
                 self.plot = pn.Row(pn.Column(t_graphs,pn.Column(*widget_boxes, css_classes=['panel-widget-box']), grids_col), pn.Column(t_dags,*dags_cols))
         else:                
             ## PLOT
-            widget_boxes = widget.get_widget_box_without_slider()                
-            self.plot = pn.Row(pn.Column(t_graphs,pn.Column(*widget_boxes, css_classes=['panel-widget-box']),t_interaction,grids_col), pn.Column(t_dags,*dags_cols))
-
+            widget_boxes = widget.get_widget_box() 
+            if self.status not in ["animated"]:               
+                self.plot = pn.Row(pn.Column(t_graphs,pn.Column(*widget_boxes, css_classes=['panel-widget-box']),t_interaction,grids_col,widget.no_i_button), pn.Column(t_dags,*dags_cols))
+            else:               
+                self.plot = pn.Row(pn.Column(t_graphs,pn.Column(*widget_boxes, css_classes=['panel-widget-box']),t_interaction,grids_col), pn.Column(t_dags,*dags_cols))
     def _activate_radio_button_if_single_inter(self, widget):  
         i_type = list(self.action_vars.keys())[0]
         i_var = self.action_vars[i_type][0]
