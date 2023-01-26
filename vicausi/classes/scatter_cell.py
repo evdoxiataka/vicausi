@@ -1,4 +1,4 @@
-from ..utils.constants import BORDER_COLOR
+from ..utils.constants import BORDER_COLOR, num_i_values
 from ..utils.functions import retrieve_intervention_info
 
 from bokeh.plotting import figure
@@ -76,7 +76,7 @@ class Scatter_Cell():
             self.i_pp_circle = self.plot.circle('x', 'y', size = 2.5, color = 'orange', source = self.scatter_interv_cds, fill_alpha = 1, line_alpha =0.2)
         else:
             # mapper = linear_cmap(field_name = 'group', palette = Oranges256, low = 0, high = 8)
-            self.mapper = linear_cmap(field_name = 'group', palette = cc.b_rainbow_bgyrm_35_85_c69[29:], low = 0, high = 4)#cc.b_rainbow_bgyrm_35_85_c69
+            self.mapper = linear_cmap(field_name = 'group', palette = cc.b_rainbow_bgyrm_35_85_c69[29:], low = 0, high = num_i_values-1)#cc.b_rainbow_bgyrm_35_85_c69
             self.i_pp_circle = self.plot.circle('x', 'y', size = 2.5, color = self.mapper, source = self.scatter_interv_cds, fill_alpha = 1, line_alpha =0.2)
         
     def update_plot(self, intervention, i_type):
@@ -97,8 +97,8 @@ class Scatter_Cell():
             samples2 = self.data.get_var_i_samples(i_var, self.var2, self.dag_id, i_type)
             if i_var and samples1 is not None:
                 if self.status == "static":
-                    data1 = samples1[[*range(0,len(samples1),int(len(samples1)/5))]]
-                    data2 = samples2[[*range(0,len(samples2),int(len(samples2)/5))]]
+                    data1 = samples1[[*range(0,len(samples1),int(len(samples1)/num_i_values))]]
+                    data2 = samples2[[*range(0,len(samples2),int(len(samples2)/num_i_values))]]
                 else:
                     # i_idx = i_value_idx[0]
                     # i_idx_min = i_idx
@@ -109,7 +109,6 @@ class Scatter_Cell():
                     #     i_idx_max = i_idx + 2
                     # data1 = samples1[[*range(i_idx_min, i_idx_max, 1)]]
                     # data2 = samples2[[*range(i_idx_min, i_idx_max, 1)]]
-                    print(self.var1,self.var2,i_value_idx)
                     data1 = samples1[i_value_idx]
                     data2 = samples2[i_value_idx]
                 x_range = self.data.get_var_i_x_range(self.var1, i_var, i_type)
@@ -127,9 +126,6 @@ class Scatter_Cell():
         ## SCATTER CDS
         if self.status not in ["static"]:
             self.scatter_interv_cds.data = {'x':np.array(data1).flatten(),"y":np.array(data2).flatten()}##remove np.array 
-            if len(data1):
-                self.mapper['transform'].low = self.scatter_interv_cds.data["x"].min()
-                self.mapper['transform'].high = self.scatter_interv_cds.data["x"].max()
         else:
             x_list = []
             y_list = []
@@ -139,6 +135,9 @@ class Scatter_Cell():
                 y_list.extend(data2[i].flatten())
                 group_id.extend([i]*len(data1[i].flatten()))
             self.scatter_interv_cds.data = {'x':np.array(x_list),"y":np.array(y_list),"group":group_id}
+            # if len(data1):
+            #     self.mapper['transform'].low = self.scatter_interv_cds.data["x"].min()
+            #     self.mapper['transform'].high = self.scatter_interv_cds.data["x"].max()
 
 
 

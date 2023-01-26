@@ -55,6 +55,10 @@ class Scatter_Matrix():
                     self.cells[var1+"$"+var2].append(cell)
                 ##Add to grid
                 self.grid[ start_point[0]:end_point[0], start_point[1]:end_point[1] ] = pn.Column(pn.pane.Bokeh(cell.get_plot()), width = 220, height = 220)
+        if self.status == "static":
+            start_point = ( 0, int((col+1)*COLS_PER_VAR) )
+            end_point = ( row+1, int((col+1)*COLS_PER_VAR+1) )
+            self.grid[ start_point[0]:end_point[0], start_point[1]:end_point[1] ] = pn.Column(pn.pane.Bokeh(cell.plot_colorbar))
 
     ## HELPERS    
     def _order_dag_vars(self):
