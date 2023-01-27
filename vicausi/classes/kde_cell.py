@@ -5,7 +5,7 @@ from bokeh.plotting import figure
 from bokeh.models import ColumnDataSource, ColorBar,LinearColorMapper
 from bokeh.palettes import Oranges256, Magma256, Viridis256, Turbo256
 import colorcet as cc
-from bokeh.transform import linear_cmap
+from bokeh.models import NumeralTickFormatter,BasicTicker
 
 import numpy as np
 
@@ -24,6 +24,10 @@ class KDE_Cell():
         ##
         self.plot = None
         self.plot_colorbar = None
+        # self.colorbar_title = None
+        # self.colorbar_callback = CustomJS(args=dict(title = self.colorbar_title), code='''
+        #                     cb_obj.title = title;
+        #                 ''')
         ## 
         self.var_type = self.data.get_var_type(self.var)
         self.pp_samples = self.data.get_var_pp_samples(self.var, self.dag_id) ## numpy array of posterior predictive samples
@@ -88,22 +92,22 @@ class KDE_Cell():
             if self.status not in ['static']:
                 self.i_pp_line = self.plot.line(x='x', y='y', line_width=2, line_color = 'orange', source = self.kde_interv_cds)
             else:
-                # mapper = linear_cmap(field_name = 'group', palette = Oranges256, low = 0, high = 11)
-                mapper = linear_cmap(field_name = 'group', palette = cc.b_rainbow_bgyrm_35_85_c69[29:], low = 0, high = num_i_values-1)
-                self.i_pp_line = self.plot.multi_line(xs='x', ys='y', line_width=2, line_color = mapper, source = self.kde_interv_cds)
+                mapper = LinearColorMapper(palette = cc.b_rainbow_bgyrm_35_85_c69[29:], low = 0, high = num_i_values-1)
+                self.i_pp_line = self.plot.multi_line(xs='x', ys='y', line_width=2, line_color = {"field":"group", "transform":mapper}, source = self.kde_interv_cds)
                 ## Dummy figure for colorbar
-                self.plot_colorbar = figure(height=1260, width=120, toolbar_location=None, min_border=0, outline_line_color=None)
-                color_bar = ColorBar(color_mapper = LinearColorMapper(palette = cc.b_rainbow_bgyrm_35_85_c69[29:], low = 0, high = num_i_values-1),
-                                    # visible = False, 
-                                    label_standoff = 12, 
-                                    # height = 500, 
-                                    title = "variable?", 
-                                    # level = 'overlay', 
-                                    # location = (0,0)
-                                    # title_text_baseline = 'top',
-                                    # name = "colorbar"
-                                    )                    
-                self.plot_colorbar.add_layout(color_bar, 'right')
+                self.plot_colorbar = figure(height=1260, width=120, title = "",toolbar_location=None, min_border=0, outline_line_color=None)
+                self.color_bar = ColorBar(color_mapper = mapper,
+                                    visible = False, 
+                                    label_standoff = 8, 
+                                    margin = 0,
+                                    padding = 0,
+                                    location = (0,0),
+                                    formatter = NumeralTickFormatter(format='0.00 a'),
+                                    ticker=BasicTicker(desired_num_ticks=30),
+                                    bar_line_color='black',
+                                    major_tick_line_color='black'
+                                    )                                 
+                self.plot_colorbar.add_layout(self.color_bar, 'right')
         else:
             self.pp_line = self.plot.segment(x0 = 'x', y0 ='y0', x1 = 'x', y1 = 'y', source = self.kde_obs_cds, line_alpha = 1.0, color = "blue", line_width = 1)
             self.pp_scat = self.plot.scatter('x', 'y', source = self.kde_obs_cds, size = 4, fill_color = "blue", fill_alpha = 1.0, line_color = "blue")
@@ -173,6 +177,8 @@ class KDE_Cell():
                 x_list = []
                 y_list = []
                 group_id = []
+                if len(data):
+                    intev_values = [self.data.get_interventions(self.dag_id)[i_type][i_var][i] for i in [*range(0,len(samples),int(len(samples)/num_i_values))]]
                 for i in range(len(data)):
                     if self.var == i_var and i_type == "atomic":
                         # kde_est = kde(np.array([data[i][0][0][0]])) 
@@ -181,34 +187,17 @@ class KDE_Cell():
                         kde_est = kde(data[i])
                     x_list.append(kde_est['x'])
                     y_list.append(kde_est['y'])
-                    group_id.append(i)
+                    group_id.append(intev_values[i])
                 self.kde_interv_cds.data = {'x':x_list,'y':y_list,'group':group_id} 
                 ## COLORBAR
                 if len(x_list):
-                    # self.plot_colorbar.right[0] = ColorBar(color_mapper = LinearColorMapper(palette = cc.b_rainbow_bgyrm_35_85_c69[29:], low = 0, high = num_i_values-1),
-                    #                 # visible = False, 
-                    #                 label_standoff = 12, 
-                    #                 # height = 500, 
-                    #                 title = i_var, 
-                    #                 # level = 'overlay', 
-                    #                 # location = (0,0)
-                    #                 title_text_baseline = 'top',
-                    #                 name = "colorbar"
-                    #                 ) 
-                    self.plot_colorbar.right[0].visible = True
-                    self.plot_colorbar.right[0].color_mapper = LinearColorMapper(palette = cc.b_rainbow_bgyrm_35_85_c69[29:], low = 0, high = num_i_values-1)
-                    self.plot_colorbar.right[0].title = i_var
-                    # color_bar = ColorBar(color_mapper = LinearColorMapper(palette = cc.b_rainbow_bgyrm_35_85_c69[29:], low = 0, high = num_i_values-1), 
-                    #                         label_standoff = 12, 
-                    #                         # height = 500, 
-                    #                         title = "variable?", 
-                    #                         # level = 'overlay', 
-                    #                         # location = (0,0)
-                    #                         title_text_baseline = 'top'
-                    #                         )  
+                    self.plot_colorbar.title.text = i_var
+                    self.color_bar.color_mapper.high = max(intev_values)
+                    self.color_bar.color_mapper.low = min(intev_values)
+                    self.color_bar.visible = True
                 else:
-                    pass
-                    # self.plot_colorbar.right[0].visible = False
+                    self.plot_colorbar.title.text = ""
+                    self.color_bar.visible = False
         else:
             kde_est = pmf(data) 
             self.kde_interv_cds.data = {'x':kde_est['x'], 'y':kde_est['y'], 'y0':kde_est['y0']} 
@@ -277,6 +266,10 @@ class KDE_Cell():
     #     ## RUG CDS
     #     if self.var_type == "Continuous":
     #         self.rug_obs_cds.data = {'x':self.pp_samples.flatten(), 'y':np.asarray([-1*max_v/RUG_DIST_RATIO]*len(self.pp_samples.flatten())),'size':np.asarray([RUG_SIZE]*len(self.pp_samples.flatten()))}    
+
+    ## CALLBACK
+    def set_empy_callback(self, attr, old, new):
+        pass
 
     ## SETTERS-GETTERS
     def get_plot(self):

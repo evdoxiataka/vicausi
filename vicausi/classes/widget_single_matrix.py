@@ -1,6 +1,7 @@
 from functools import partial
 from bokeh.models import Slider, Toggle
 import asyncio
+
 import panel as pn
 pn.extension()
 
