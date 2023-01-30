@@ -29,8 +29,8 @@ class Scatter_Cell():
         ## 
         self.var_type1 = self.data.get_var_type(self.var1)
         self.var_type2 = self.data.get_var_type(self.var2)
-        self.x_range_var1 = self.data.get_var_x_range(self.var1)
-        self.x_range_var2 = self.data.get_var_x_range(self.var2)
+        self.x_range_var1 = self.data.get_var_x_range(self.dag_id, self.var1)
+        self.x_range_var2 = self.data.get_var_x_range(self.dag_id, self.var2)
         self.pp_samples1 = self.data.get_var_pp_samples(self.var1, self.dag_id).flatten() ## numpy array of posterior predictive samples
         self.pp_samples2 = self.data.get_var_pp_samples(self.var2, self.dag_id).flatten()
         self.observations1 = self.data.get_var_observations(self.var1) ## 
@@ -111,13 +111,13 @@ class Scatter_Cell():
                     # data2 = samples2[[*range(i_idx_min, i_idx_max, 1)]]
                     data1 = samples1[i_value_idx]
                     data2 = samples2[i_value_idx]
-                x_range = self.data.get_var_i_x_range(self.var1, i_var, i_type)
-                y_range = self.data.get_var_i_x_range(self.var2, i_var, i_type)
+                x_range = self.data.get_var_i_x_range(self.dag_id, self.var1, i_var, i_type)
+                y_range = self.data.get_var_i_x_range(self.dag_id, self.var2, i_var, i_type)
             else:
                 data1 = np.array([])
                 data2 = np.array([])
-                x_range = self.data.get_var_x_range(self.var1)
-                y_range = self.data.get_var_x_range(self.var2)
+                x_range = self.data.get_var_x_range(self.dag_id, self.var1)
+                y_range = self.data.get_var_x_range(self.dag_id,self.var2)
             ##
             self.plot.x_range.start = x_range[0]
             self.plot.x_range.end = x_range[1]

@@ -33,7 +33,7 @@ class KDE_Cell():
         self.pp_samples = self.data.get_var_pp_samples(self.var, self.dag_id) ## numpy array of posterior predictive samples
         if self.showData:
             self.observations = self.data.get_var_observations(self.var) ## 
-        self.x_range = self.data.get_var_x_range(self.var)
+        self.x_range = self.data.get_var_x_range(self.dag_id, self.var)
         ## 
         self.kde_obs_cds = None
         self.kde_interv_cds = None
@@ -159,10 +159,10 @@ class KDE_Cell():
                     data = samples[i_value_idx]
                     if self.showData:
                         data_hgh_idx = []
-                self.x_range = self.data.get_var_i_x_range(self.var, i_var, i_type)                
+                self.x_range = self.data.get_var_i_x_range(self.dag_id, self.var, i_var, i_type)                
             else:
                 data = np.array([])
-                self.x_range = self.data.get_var_x_range(self.var)
+                self.x_range = self.data.get_var_x_range(self.dag_id, self.var)
                 if self.showData:
                     data_hgh_idx = []
             ##
