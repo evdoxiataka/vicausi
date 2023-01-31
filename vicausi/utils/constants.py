@@ -6,12 +6,7 @@ hdi_magn = 0.6
 shift_i_magn = 1.
 slider_tick_num = 50
 
-## inference constants
-# samples = 2000
-# chains = 1
-# tune = 2000
-# pp_samples = 20
-# sim_i_pp_samples = 6
+## num of i instances presented in static condition
 num_i_values = 6
 
 ##

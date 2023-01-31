@@ -26,7 +26,7 @@ def comparative_causal_visualizer(files, var_order, status = "i_value", addToggl
     demo = Demo_Comparative_Graph(files, var_order, status = status, addToggles = addToggles, showData = showData, mean_obs = mean_obs)
     demo.get_plot().show()
 
-def single_matrix_visualizer(files, dag_id, var_order, status, interventions, showData = False):    
+def single_matrix_visualizer(files, dag_id, var_order, status, interventions, showData = False):  #, dags_presented  
     """
         Simulations of Causal Interventions using scatter matrices for the vizualization.
         Parameters:
@@ -36,4 +36,5 @@ def single_matrix_visualizer(files, dag_id, var_order, status, interventions, sh
             status: String in {"static","i_value","i_density","i_range", "animated"} for static or interactive (having a slider for setting the intervention value) version of tool
     """ 
     demo = Demo_Single_Matrix(files, dag_id, var_order, status, interventions, showData = showData)
-    demo.get_plot().show()
+    return demo
+    # demo.get_plot().show()

@@ -44,6 +44,10 @@ class Widget_Single_Matrix():
             self.slider_titles_map = {"stratify": "Set the range of *", "atomic":"Set the value of *","shift":"Set the shift (x) of *'s mean (mean+x)","variance":"Set the divisor (x) of *'s variance (variance/x)"}
         else:
             self.slider_titles_map = {"atomic":"The value of * is","shift":"The shift (x) of *'s mean (mean+x) is","variance":"The divisor (x) of *'s variance (variance/x) is"}
+        ## track record of interactions
+        self.intervention_selection = [] # List of (i_type,i_var)
+        self.slider_selection = {} # Dict (<idx in self.intervention_selection>: List of idx to slider values)
+        self.toggle_clicks = 0
         ##
         self.create_widgets()
         self.register_callbacks()
@@ -180,6 +184,7 @@ class Widget_Single_Matrix():
     
     ## CALLBACKS called when toggle3 is clicked 
     def changeToggleLabel(self, event):
+        self.toggle_clicks = self.toggle_clicks + 1
         if "Hide" in self.toggle3.label:
             self.toggle3.label = self.toggle3.label.replace("Hide", "Show")
         elif "Show" in self.toggle3.label:
@@ -247,6 +252,7 @@ class Widget_Single_Matrix():
             i_type: String in {"atomic","shift","variance"}
         """
         if event.new:
+            self.intervention_selection.append((i_type,event.new))
             ##
             self._reset_i_radio_buttons(itype = i_type)
             interv_data = self._retrieve_intervention_values(i_type)
@@ -261,13 +267,23 @@ class Widget_Single_Matrix():
         ##
         var = self._retrieve_radio_button_selection(i_type)
         if var:
+            ##
+            if len(self.intervention_selection)-1 not in self.slider_selection:
+                self.slider_selection[len(self.intervention_selection)-1] = []
+            self.slider_selection[len(self.intervention_selection)-1].append(new)
+            ##
             interv_data = self._retrieve_intervention_values(i_type)
             ##
             if var:
                 if self.status in ["i_value", "animated"]:
                     interv_values = interv_data[var]
                     self.slider.title = self.slider_titles_map[i_type].replace("*",var)+":"+"{:.2f}".format(interv_values[new])
-                
+        else:
+            self.intervention_selection.append((None,None))     
+            if len(self.intervention_selection)-1 not in self.slider_selection:
+                self.slider_selection[len(self.intervention_selection)-1] = []
+            self.slider_selection[len(self.intervention_selection)-1].append(new)
+            
     def sel_value_update_cell(self, i_type, cell, attr, old, new):
         var = self._retrieve_radio_button_selection(i_type)
         if var:

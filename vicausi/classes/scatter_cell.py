@@ -60,13 +60,15 @@ class Scatter_Cell():
         self.plot = figure(width = 420, height = 420, x_range = self.x_range_var1, y_range = self.x_range_var2, tools = [])
         self.plot.xaxis[0].axis_label = self.var1
         self.plot.yaxis[0].axis_label = self.var2
+        self.plot.xaxis[0].ticker.desired_num_ticks = 4
+        self.plot.yaxis[0].ticker.desired_num_ticks = 5
         self.plot.xaxis.axis_label_text_font_size = "13pt"
         self.plot.xaxis.major_label_text_font_size = "11pt"
         # self.plot.axis.axis_label_text_font_style = 'bold'
         self.plot.yaxis.axis_label_text_font_size = "13pt"
         self.plot.yaxis.major_label_text_font_size = "11pt"
         self.plot.border_fill_color = BORDER_COLOR
-        self.plot.min_border = 15
+        self.plot.min_border = 14
         self.plot.toolbar.logo = None
         ## SCATTER PLOT
         self.pp_circle = self.plot.circle('x', 'y', size = 2.5, color = 'blue', source = self.scatter_obs_cds, fill_alpha = 1, line_alpha =0.2)

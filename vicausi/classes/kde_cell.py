@@ -80,11 +80,12 @@ class KDE_Cell():
         self.plot = figure(width = 420, height = 420, x_range = self.x_range, tools = [])#"wheel_zoom,reset,box_zoom"
         self.plot.xaxis.axis_label_text_font_size = "13pt"
         self.plot.xaxis.major_label_text_font_size = "11pt"
-        # self.plot.axis.axis_label_text_font_style = 'bold'
+        # self.plot.axis.axis_label_text_font_style = 'bold'        
         self.plot.yaxis.visible = False
         self.plot.xaxis[0].axis_label = self.var
+        self.plot.xaxis[0].ticker.desired_num_ticks = 4
         self.plot.border_fill_color = BORDER_COLOR
-        self.plot.min_border = 15
+        self.plot.min_border = 14
         self.plot.toolbar.logo = None
         ## KDE
         if self.var_type == "Continuous":
@@ -214,58 +215,6 @@ class KDE_Cell():
         ## RUG CDS
         if self.var_type == "Continuous":
             self.rug_obs_cds.data = {'x':self.pp_samples.flatten(), 'y':np.asarray([-1*max_v/RUG_DIST_RATIO]*len(self.pp_samples.flatten())),'size':np.asarray([RUG_SIZE]*len(self.pp_samples.flatten()))}    
-
-    # def update_plot_stratification(self, intervention, i_type):
-    #     """
-    #     Parameters:
-    #     -----------
-    #         intervention: Dict(<i_var>: (value_idx, value))
-    #         i_type: String in {"atomic", "shift","variance","stratify"}
-    #     """ 
-    #     i_var, _, i_value = retrieve_intervention_info(intervention)
-    #     samples_idx = self.data.get_var_pp_samples_idx(i_var, self.dag_id, i_value)
-    #     data = self.pp_samples.flatten()[samples_idx]
-    #     # if i_var and samples is not None:
-    #     #     # if self.status in ["i_value","animated"] and self.var == i_var:
-    #     #     data = samples
-    #             # if self.showData:
-    #             #     data_hgh_idx = get_data_hgh_indices(i_value[0], self.data_cds.data['x'], DATA_HGH_NUM)
-    #         # elif self.status == "static":
-    #         #     data = samples
-    #         #     if self.showData:
-    #         #         data_hgh_idx = []
-    #         # else:
-    #         #     data = samples[i_value_idx]
-    #         #     if self.showData:
-    #         #         data_hgh_idx = []
-    #         # self.x_range = self.data.get_var_i_x_range(self.var, i_var, i_type)                
-    #     # else:
-    #     #     data = np.array([])
-    #         # if self.showData:
-    #         #     data_hgh_idx = []
-    #     ##
-    #     # self.plot.x_range.start = self.x_range[0]
-    #     # self.plot.x_range.end = self.x_range[1]
-    #     ## KDE CDS
-    #     if self.var_type == "Continuous":
-    #         kde_est = kde(data) 
-    #         self.kde_interv_cds.data = {'x':kde_est['x'],'y':kde_est['y']} 
-    #     else:
-    #         kde_est = pmf(data) 
-    #         self.kde_interv_cds.data = {'x':kde_est['x'],'y':kde_est['y'],'y0':kde_est['y0']} 
-    #     ## OBSERVATIONS CDS
-    #     max_v = np.concatenate((self.kde_obs_cds.data['y'], self.kde_interv_cds.data['y']), axis=None).max()
-    #     # if self.showData:
-    #     #     data_obs = self.data_cds.data['x']
-    #     #     if len(data_hgh_idx) == 0:
-    #     #         data_idx = [i for i in range(len(data_obs))]
-    #     #     else:
-    #     #         data_idx = [i for i in range(len(data_obs)) if i not in data_hgh_idx]
-    #     #     self.data_cds_left.data = {'x':data_obs[data_idx], 'y':np.asarray([-1*max_v/DATA_DIST_RATIO]*len(data_idx))}
-    #     #     self.data_cds_hghl.data = {'x':data_obs[data_hgh_idx], 'y':np.asarray([-1*max_v/DATA_DIST_RATIO]*len(data_hgh_idx))}
-    #     ## RUG CDS
-    #     if self.var_type == "Continuous":
-    #         self.rug_obs_cds.data = {'x':self.pp_samples.flatten(), 'y':np.asarray([-1*max_v/RUG_DIST_RATIO]*len(self.pp_samples.flatten())),'size':np.asarray([RUG_SIZE]*len(self.pp_samples.flatten()))}    
 
     ## CALLBACK
     def set_empy_callback(self, attr, old, new):
