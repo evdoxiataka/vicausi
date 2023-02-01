@@ -59,7 +59,7 @@ class Widget_Single_Matrix():
             if self.single_intervention and self.status == "animated":
                 title = pn.pane.Markdown(''' Click to start the animation ''', style={'font-size': "18px",'margin-bottom': '0px'})
             else:                
-                title = pn.pane.Markdown(''' Atomic Intervention ''', style={'font-size': "18px",'margin-bottom': '0px'})
+                title = pn.pane.Markdown(''' Atomic Intervention (set the value) ''', style={'font-size': "18px",'margin-bottom': '0px'})
             self.widget_box.append(pn.WidgetBox(title, self.w_a))
         ## Shift
         if "shift" in self.action_vars:
@@ -67,7 +67,7 @@ class Widget_Single_Matrix():
             if self.single_intervention and self.status == "animated":
                 title = pn.pane.Markdown(''' Click to start the animation ''', style={'font-size': "18px",'margin-bottom': '0px'})
             else:                
-                title = pn.pane.Markdown(''' Shift Intervention ''', style={'font-size': "18px",'margin-bottom': '0px'})
+                title = pn.pane.Markdown(''' Shift Intervention (shift all values by x) ''', style={'font-size': "18px",'margin-bottom': '0px'})
             self.widget_box.append(pn.WidgetBox(title, self.w_s))
         ## Variance
         if "variance" in self.action_vars:
@@ -75,7 +75,7 @@ class Widget_Single_Matrix():
             if self.single_intervention and self.status == "animated":
                 title = pn.pane.Markdown(''' Select the variable below to start the animation ''', style={'font-size': "18px",'margin-bottom': '0px'})
             else:                
-                title = pn.pane.Markdown(''' Variance Intervention ''', style={'font-size': "18px",'margin-bottom': '0px'})
+                title = pn.pane.Markdown(''' Variance Intervention (scale variance by x) ''', style={'font-size': "18px",'margin-bottom': '0px'})
             self.widget_box.append(pn.WidgetBox(title, self.w_v))
         ## Stratify
         if "stratify" in self.action_vars:

@@ -30,7 +30,10 @@ class Scatter_Matrix():
         ## prepare vars list ordered as wished
         vars_ordered = self._order_dag_vars()
         ##
-        self.grid = pn.GridSpec(sizing_mode = 'fixed')
+        # if self.status not in ["static"]:
+        self.grid = pn.GridSpec(sizing_mode = 'fixed', width=810, height=810)
+        # else:
+        #     self.grid = pn.GridSpec(sizing_mode = 'fixed', width=870, height=810)
         for row in range(len(vars_ordered)):
             for col in range(len(vars_ordered)):
                 if col > row:
@@ -54,11 +57,11 @@ class Scatter_Matrix():
                         self.cells[var1+"$"+var2] = []
                     self.cells[var1+"$"+var2].append(cell)
                 ##Add to grid
-                self.grid[ start_point[0]:end_point[0], start_point[1]:end_point[1] ] = pn.Column(pn.pane.Bokeh(cell.get_plot()), width = 270, height = 270)
-        if self.status == "static":
-            start_point = ( 0, int((col+1)*COLS_PER_VAR) )
-            end_point = ( row+1, int((col+1)*COLS_PER_VAR+1) )
-            self.grid[ start_point[0]:end_point[0], start_point[1]:end_point[1] ] = pn.Column(pn.pane.Bokeh(cell.plot_colorbar))
+                self.grid[ start_point[0]:end_point[0], start_point[1]:end_point[1] ] = pn.Column(pn.pane.Bokeh(cell.get_plot()), width = 270, height = 270,sizing_mode = 'fixed')
+        # if self.status == "static":
+        #     start_point = ( 0, int((col+1)*COLS_PER_VAR) )
+        #     end_point = ( row+1, int((col+1)*COLS_PER_VAR+1) )
+        #     self.grid[ start_point[0]:end_point[0], start_point[1]:end_point[1] ] = pn.Column(pn.pane.Bokeh(cell.plot_colorbar))
 
     ## HELPERS    
     def _order_dag_vars(self):

@@ -78,7 +78,7 @@ class Demo_Single_Matrix():
         if self.status not in ["static"]:
             grids_col = pn.Column(pn.Column(self.widget.slider, css_classes=['panel-widget-box'], width = 550), grid_obs.get_grid())
         else:
-            grids_col = pn.Column(grid_obs.get_grid())
+            grids_col = pn.Row(grid_obs.get_grid(),pn.pane.Bokeh(grid_obs.cells[self.var_order[-1]][-1].plot_colorbar))
         if self.single_intervention:            
             ## PLOT
             if self.status not in ["animated"]:  

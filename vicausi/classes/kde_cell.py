@@ -93,10 +93,16 @@ class KDE_Cell():
             if self.status not in ['static']:
                 self.i_pp_line = self.plot.line(x='x', y='y', line_width=2, line_color = 'orange', source = self.kde_interv_cds)
             else:
-                mapper = LinearColorMapper(palette = cc.b_rainbow_bgyrm_35_85_c69[29:], low = 0, high = num_i_values-1)
+                mapper = LinearColorMapper(palette = cc.b_linear_bmy_10_95_c71, low = 0, high = num_i_values-1)
+                # mapper = LinearColorMapper(palette = cc.b_rainbow_bgyrm_35_85_c69[29:], low = 0, high = num_i_values-1)
                 self.i_pp_line = self.plot.multi_line(xs='x', ys='y', line_width=2, line_color = {"field":"group", "transform":mapper}, source = self.kde_interv_cds)
                 ## Dummy figure for colorbar
-                self.plot_colorbar = figure(height=1260, width=120, title = "",toolbar_location=None, min_border=0, outline_line_color=None)
+                self.plot_colorbar = figure(height=810, width=0, title = "",title_location = "left",toolbar_location=None, min_border=0, outline_line_color=None)
+                self.plot_colorbar.title.align = "right"
+                self.plot_colorbar.title.text_font_size = "16px"
+                self.plot_colorbar.margin = 0
+                self.plot_colorbar.min_border = 0
+                self.plot_colorbar.frame_width=0
                 self.color_bar = ColorBar(color_mapper = mapper,
                                     visible = False, 
                                     label_standoff = 8, 
@@ -153,7 +159,8 @@ class KDE_Cell():
                     if self.showData:
                         data_hgh_idx = get_data_hgh_indices(i_value[0], self.data_cds.data['x'], DATA_HGH_NUM)
                 elif self.status == "static":
-                    data = samples[[*range(0,len(samples),int(len(samples)/num_i_values))]]
+                    data = samples
+                    # data = samples[[*range(0,len(samples),int(len(samples)/num_i_values))]]
                     if self.showData:
                         data_hgh_idx = []
                 else:
@@ -177,26 +184,33 @@ class KDE_Cell():
             else:
                 x_list = []
                 y_list = []
-                group_id = []
+                group_id = []                
                 if len(data):
-                    intev_values = [self.data.get_interventions(self.dag_id)[i_type][i_var][i] for i in [*range(0,len(samples),int(len(samples)/num_i_values))]]
-                for i in range(len(data)):
-                    if self.var == i_var and i_type == "atomic":
-                        # kde_est = kde(np.array([data[i][0][0][0]])) 
-                        kde_est = kde(data[i])
-                    else:
-                        kde_est = kde(data[i])
-                    x_list.append(kde_est['x'])
-                    y_list.append(kde_est['y'])
-                    group_id.append(intev_values[i])
+                    i_values_edges = [*range(0,len(data),int(len(data)/num_i_values))]
+                    i_values = self.data.get_interventions(self.dag_id)
+                    mean_group_intev_values = [(i_values[i_type][i_var][i]+i_values[i_type][i_var][i+1])/2. for i in i_values_edges]
+                    for idx,_ in enumerate(i_values_edges):
+                        if idx == len(i_values_edges)-1:
+                            break
+                        idx1 = i_values_edges[idx]
+                        idx2 = i_values_edges[idx+1]
+                        kde_est = kde(data[[*range(idx1,idx2)]].flatten())
+                        x_list.append(kde_est['x'])
+                        y_list.append(kde_est['y'])                        
+                        group_id.append(mean_group_intev_values[idx])
+                        ##
+                        if i_type == "shift":
+                            self.plot_colorbar.title.text = i_var+" shift x"
+                        elif i_type == "variance":
+                            self.plot_colorbar.title.text = i_var+" variance x"
+                        else:
+                            self.plot_colorbar.title.text = i_var
+                        self.color_bar.color_mapper.high = max(mean_group_intev_values)
+                        self.color_bar.color_mapper.low = min(mean_group_intev_values)
+                        self.color_bar.visible = True
                 self.kde_interv_cds.data = {'x':x_list,'y':y_list,'group':group_id} 
                 ## COLORBAR
-                if len(x_list):
-                    self.plot_colorbar.title.text = i_var
-                    self.color_bar.color_mapper.high = max(intev_values)
-                    self.color_bar.color_mapper.low = min(intev_values)
-                    self.color_bar.visible = True
-                else:
+                if len(x_list) == 0:
                     self.plot_colorbar.title.text = ""
                     self.color_bar.visible = False
         else:

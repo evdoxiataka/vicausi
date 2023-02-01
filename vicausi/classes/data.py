@@ -131,19 +131,11 @@ class Data():
                 ## atomic intervention
                 for i_var in self.causal_inference['dags'][i]['ia_samples']:
                     if var in self.causal_inference['dags'][i]['ia_samples'][i_var]:
-                        # if i_var not in x_range_ia_var_min:
-                        #     x_range_ia_var_min[i_var] = []
-                        #     x_range_ia_var_max[i_var] = []
                         x_range_ia_var_min[i_var] = min([x_range_min,np.array(self.causal_inference['dags'][i]['ia_samples'][i_var][var]).min()]).tolist()
                         x_range_ia_var_max[i_var]= max([x_range_max,np.array(self.causal_inference['dags'][i]['ia_samples'][i_var][var]).max()]).tolist()
                 ## shift
                 for i_var in self.causal_inference['dags'][i]['is_samples']:
                     if var in self.causal_inference['dags'][i]['is_samples'][i_var]:
-                        # if i_var not in x_range_is_var_min:
-                        #     x_range_is_var_min[i_var] = []
-                        #     x_range_is_var_max[i_var] = []
-                        #     x_range_iv_var_min[i_var] = []
-                        #     x_range_iv_var_max[i_var] = []
                         x_range_is_var_min[i_var] = min([x_range_min, np.array(self.causal_inference['dags'][i]['is_samples'][i_var][var]).min()]).tolist()
                         x_range_is_var_max[i_var] = max([x_range_max, np.array(self.causal_inference['dags'][i]['is_samples'][i_var][var]).max()]).tolist()
                         x_range_iv_var_min[i_var] = min([x_range_min,np.array(self.causal_inference['dags'][i]['iv_samples'][i_var][var]).min()]).tolist()

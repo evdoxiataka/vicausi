@@ -71,15 +71,15 @@ class Scatter_Cell():
         self.plot.min_border = 14
         self.plot.toolbar.logo = None
         ## SCATTER PLOT
-        self.pp_circle = self.plot.circle('x', 'y', size = 2.5, color = 'blue', source = self.scatter_obs_cds, fill_alpha = 1, line_alpha =0.2)
+        self.pp_circle = self.plot.circle('x', 'y', size = 1, color = 'blue', source = self.scatter_obs_cds, fill_alpha = 1)
         if self.showData:
-            self.obs_circle = self.plot.circle('x', 'y', size = 5, color = '#00CCFF', source = self.data_pairs_cds, fill_alpha = 0.5, line_alpha =0.5)
+            self.obs_circle = self.plot.circle('x', 'y', size = 5, color = '#00CCFF', source = self.data_pairs_cds, fill_alpha = 1)
         if self.status not in ['static']:
-            self.i_pp_circle = self.plot.circle('x', 'y', size = 2.5, color = 'orange', source = self.scatter_interv_cds, fill_alpha = 1, line_alpha =0.2)
+            self.i_pp_circle = self.plot.circle('x', 'y', size = 1, color = 'orange', source = self.scatter_interv_cds, fill_alpha = 1)
         else:
-            # mapper = linear_cmap(field_name = 'group', palette = Oranges256, low = 0, high = 8)
-            self.mapper = linear_cmap(field_name = 'group', palette = cc.b_rainbow_bgyrm_35_85_c69[29:], low = 0, high = num_i_values-1)#cc.b_rainbow_bgyrm_35_85_c69
-            self.i_pp_circle = self.plot.circle('x', 'y', size = 2.5, color = self.mapper, source = self.scatter_interv_cds, fill_alpha = 1, line_alpha =0.2)
+            mapper = linear_cmap(field_name = 'group', palette = cc.b_linear_bmy_10_95_c71, low = 0, high = num_i_values-1)
+            # mapper = linear_cmap(field_name = 'group', palette = cc.b_rainbow_bgyrm_35_85_c69[29:], low = 0, high = num_i_values-1)#cc.b_rainbow_bgyrm_35_85_c69
+            self.i_pp_circle = self.plot.circle('x', 'y', size = 1, color = mapper, source = self.scatter_interv_cds, fill_alpha = 1)
         
     def update_plot(self, intervention, i_type):
         """
@@ -99,8 +99,10 @@ class Scatter_Cell():
             samples2 = self.data.get_var_i_samples(i_var, self.var2, self.dag_id, i_type)
             if i_var and samples1 is not None:
                 if self.status == "static":
-                    data1 = samples1[[*range(0,len(samples1),int(len(samples1)/num_i_values))]]
-                    data2 = samples2[[*range(0,len(samples2),int(len(samples2)/num_i_values))]]
+                    data1 = samples1
+                    data2 = samples2
+                    # data1 = samples1[[*range(0,len(samples1),int(len(samples1)/num_i_values))]]
+                    # data2 = samples2[[*range(0,len(samples2),int(len(samples2)/num_i_values))]]
                 else:
                     # i_idx = i_value_idx[0]
                     # i_idx_min = i_idx
@@ -132,16 +134,17 @@ class Scatter_Cell():
             x_list = []
             y_list = []
             group_id = []
-            for i in range(len(data1)):
-                x_list.extend(data1[i].flatten())
-                y_list.extend(data2[i].flatten())
-                group_id.extend([i]*len(data1[i].flatten()))
+            if len(data1):
+                i_values_edges = [*range(0,len(data1),int(len(data1)/num_i_values))]
+                for idx,_ in enumerate(i_values_edges):
+                    if idx == len(i_values_edges)-1:
+                        break
+                    idx1 = i_values_edges[idx]
+                    idx2 = i_values_edges[idx+1]
+                    x_list.extend(data1[[*range(idx1,idx2)]].flatten())
+                    y_list.extend(data2[[*range(idx1,idx2)]].flatten())
+                    group_id.extend([idx]*len(data1[[*range(idx1,idx2)]].flatten()))
             self.scatter_interv_cds.data = {'x':np.array(x_list),"y":np.array(y_list),"group":group_id}
-            # if len(data1):
-            #     self.mapper['transform'].low = self.scatter_interv_cds.data["x"].min()
-            #     self.mapper['transform'].high = self.scatter_interv_cds.data["x"].max()
-
-
 
     ## SETTERS-GETTERS
     def get_plot(self):
