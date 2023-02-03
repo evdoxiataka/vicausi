@@ -30,10 +30,7 @@ class Scatter_Matrix():
         ## prepare vars list ordered as wished
         vars_ordered = self._order_dag_vars()
         ##
-        # if self.status not in ["static"]:
-        self.grid = pn.GridSpec(sizing_mode = 'fixed', width=810, height=810)
-        # else:
-        #     self.grid = pn.GridSpec(sizing_mode = 'fixed', width=870, height=810)
+        self.grid = pn.GridSpec(sizing_mode = 'fixed', width=600, height=600)
         for row in range(len(vars_ordered)):
             for col in range(len(vars_ordered)):
                 if col > row:

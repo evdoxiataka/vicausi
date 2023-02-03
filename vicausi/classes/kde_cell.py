@@ -1,5 +1,5 @@
 from ..utils.functions import kde, pmf, get_data_hgh_indices, retrieve_intervention_info
-from ..utils.constants import DATA_SIZE, DATA_DIST_RATIO, RUG_DIST_RATIO, RUG_SIZE, BORDER_COLOR, DATA_HGH_NUM, num_i_values
+from ..utils.constants import DATA_SIZE, DATA_DIST_RATIO, RUG_DIST_RATIO, RUG_SIZE, BORDER_COLOR, DATA_HGH_NUM, num_i_values, BASE_COLOR, SECONDARY_COLOR, STATIC_BASE_COLOR
 
 from bokeh.plotting import figure
 from bokeh.models import ColumnDataSource, ColorBar,LinearColorMapper
@@ -22,12 +22,13 @@ class KDE_Cell():
         self.status = status   
         self.showData = showData
         ##
+        self.base_color = BASE_COLOR
+        self.second_color = SECONDARY_COLOR
+        if self.status == "static":
+            self.base_color = STATIC_BASE_COLOR
+        ##
         self.plot = None
         self.plot_colorbar = None
-        # self.colorbar_title = None
-        # self.colorbar_callback = CustomJS(args=dict(title = self.colorbar_title), code='''
-        #                     cb_obj.title = title;
-        #                 ''')
         ## 
         self.var_type = self.data.get_var_type(self.var)
         self.pp_samples = self.data.get_var_pp_samples(self.var, self.dag_id) ## numpy array of posterior predictive samples
@@ -54,7 +55,8 @@ class KDE_Cell():
         self.initialize_plot()
 
     def initialize_plot(self):
-        ## KDE cds
+        ## CDS
+        ## KDE
         if self.var_type == "Continuous":
             kde_est = kde(self.pp_samples)   
             self.kde_obs_cds = ColumnDataSource(data={'x':kde_est['x'],'y':kde_est['y']})
@@ -66,18 +68,18 @@ class KDE_Cell():
             kde_est = pmf(self.pp_samples)
             self.kde_obs_cds = ColumnDataSource(data={'x':kde_est['x'],'y':kde_est['y'],'y0':kde_est['y0']})
             self.kde_interv_cds = ColumnDataSource(data={'x':[],'y':[],'y0':[]})                    
-        ## Observvations cds
+        ## OBSERVATIONS
         max_v = self.kde_obs_cds.data['y'].max()
         if self.showData:
             self.data_cds = ColumnDataSource(data={'x':self.observations,'y':np.asarray([-1*max_v/DATA_DIST_RATIO]*len(self.observations))})
             self.data_cds_hghl = ColumnDataSource(data = {'x':np.asarray([]),'y':np.asarray([])})
             self.data_cds_left = ColumnDataSource(data = {'x':self.observations,'y':np.asarray([-1*max_v/DATA_DIST_RATIO]*len(self.observations))})
-        ## Rug plot cds
+        ## RUG PLOT
         if self.var_type == "Continuous":
             r_data = self.pp_samples.flatten()
             self.rug_obs_cds = ColumnDataSource(data = {'x':r_data,'y':np.asarray([-1*max_v/RUG_DIST_RATIO]*len(r_data)),'size':np.asarray([RUG_SIZE]*len(r_data))})
-        ## FIGURE and glyphs
-        self.plot = figure(width = 420, height = 420, x_range = self.x_range, tools = [])#"wheel_zoom,reset,box_zoom"
+        ## FIGURE
+        self.plot = figure(width = 420, height = 420, tools = [], x_range = self.x_range)#"wheel_zoom,reset,box_zoom" 
         self.plot.xaxis.axis_label_text_font_size = "13pt"
         self.plot.xaxis.major_label_text_font_size = "11pt"
         # self.plot.axis.axis_label_text_font_style = 'bold'        
@@ -87,17 +89,17 @@ class KDE_Cell():
         self.plot.border_fill_color = BORDER_COLOR
         self.plot.min_border = 14
         self.plot.toolbar.logo = None
-        ## KDE
+        ## KDE GLYPHS
         if self.var_type == "Continuous":
-            self.pp_line = self.plot.line(x='x', y='y', line_width=2, line_color = 'blue', source = self.kde_obs_cds)
+            self.pp_line = self.plot.line(x='x', y='y', line_width=2, line_color = self.base_color, source = self.kde_obs_cds)
             if self.status not in ['static']:
-                self.i_pp_line = self.plot.line(x='x', y='y', line_width=2, line_color = 'orange', source = self.kde_interv_cds)
+                self.i_pp_line = self.plot.line(x='x', y='y', line_width=2, line_color = self.second_color, source = self.kde_interv_cds)
             else:
                 mapper = LinearColorMapper(palette = cc.b_linear_bmy_10_95_c71, low = 0, high = num_i_values-1)
                 # mapper = LinearColorMapper(palette = cc.b_rainbow_bgyrm_35_85_c69[29:], low = 0, high = num_i_values-1)
                 self.i_pp_line = self.plot.multi_line(xs='x', ys='y', line_width=2, line_color = {"field":"group", "transform":mapper}, source = self.kde_interv_cds)
                 ## Dummy figure for colorbar
-                self.plot_colorbar = figure(height=810, width=0, title = "",title_location = "left",toolbar_location=None, min_border=0, outline_line_color=None)
+                self.plot_colorbar = figure(height=600, width=0, title = "",title_location = "left",toolbar_location=None, min_border=0, outline_line_color=None)
                 self.plot_colorbar.title.align = "right"
                 self.plot_colorbar.title.text_font_size = "16px"
                 self.plot_colorbar.margin = 0
@@ -116,17 +118,17 @@ class KDE_Cell():
                                     )                                 
                 self.plot_colorbar.add_layout(self.color_bar, 'right')
         else:
-            self.pp_line = self.plot.segment(x0 = 'x', y0 ='y0', x1 = 'x', y1 = 'y', source = self.kde_obs_cds, line_alpha = 1.0, color = "blue", line_width = 1)
-            self.pp_scat = self.plot.scatter('x', 'y', source = self.kde_obs_cds, size = 4, fill_color = "blue", fill_alpha = 1.0, line_color = "blue")
-            self.i_pp_line = self.plot.segment(x0 = 'x', y0 ='y0', x1 = 'x', y1 = 'y', source = self.kde_interv_cds, line_alpha = 0.5, color = "orange", line_width = 1)
-            self.i_pp_scat = self.plot.scatter('x', 'y', source = self.kde_interv_cds, size = 4, fill_color = "orange", fill_alpha = 0.5, line_color = "orange")
+            self.pp_line = self.plot.segment(x0 = 'x', y0 ='y0', x1 = 'x', y1 = 'y', source = self.kde_obs_cds, line_alpha = 1.0, color = self.base_color, line_width = 1)
+            self.pp_scat = self.plot.scatter('x', 'y', source = self.kde_obs_cds, size = 4, fill_color = self.base_color, fill_alpha = 1.0, line_color = self.base_color)
+            self.i_pp_line = self.plot.segment(x0 = 'x', y0 ='y0', x1 = 'x', y1 = 'y', source = self.kde_interv_cds, line_alpha = 0.5, color = self.second_color, line_width = 1)
+            self.i_pp_scat = self.plot.scatter('x', 'y', source = self.kde_interv_cds, size = 4, fill_color = self.second_color, fill_alpha = 0.5, line_color = self.second_color)
         ## DATA     
         if self.showData:
             self.obs_left = self.plot.asterisk('x', 'y', size = DATA_SIZE, line_color = '#00CCFF', source = self.data_cds_left)
-            self.obs_hghl = self.plot.asterisk('x', 'y', size = DATA_SIZE, line_color = 'orange', source = self.data_cds_hghl)
+            self.obs_hghl = self.plot.asterisk('x', 'y', size = DATA_SIZE, line_color = self.second_color, source = self.data_cds_hghl)
         ## RUG PLOT
         if self.var_type == "Continuous":
-            self.rug = self.plot.dash('x', 'y', size='size', angle = 90.0, angle_units = 'deg', line_color = 'blue', source = self.rug_obs_cds)   
+            self.rug = self.plot.dash('x', 'y', size='size', angle = 90.0, angle_units = 'deg', line_color = self.base_color, source = self.rug_obs_cds)   
 
     def update_plot(self, intervention, i_type):
         """

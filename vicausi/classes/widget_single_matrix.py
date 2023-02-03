@@ -21,6 +21,10 @@ class Widget_Single_Matrix():
         self.action_vars = action_vars
         self.addToggles = addToggles
         ##
+        self.width = 310
+        self.font_size = "16px"
+        self.style = {'font-size': self.font_size,'margin-bottom': '0px','margin-top': '0px'}
+        ##
         if len(self.action_vars) == 1 and len(list(self.action_vars.values())[0]) == 1:
             self.single_intervention = True
         else:
@@ -41,9 +45,9 @@ class Widget_Single_Matrix():
         #     self.widget_box.append(pn.Spacer(height=16))
         ##
         if self.status == "i_value":
-            self.slider_titles_map = {"stratify": "Set the range of *", "atomic":"Set the value of *","shift":"Set the shift (x) of *'s mean (mean+x)","variance":"Set the divisor (x) of *'s variance (variance/x)"}
+            self.slider_titles_map = {"stratify": "Set the range of *", "atomic":"Set the value of *","shift":"Set the shift (x) of *'s values","variance":"Set the scale (x) of *'s variance (x*variance)"}
         else:
-            self.slider_titles_map = {"atomic":"The value of * is","shift":"The shift (x) of *'s mean (mean+x) is","variance":"The divisor (x) of *'s variance (variance/x) is"}
+            self.slider_titles_map = {"atomic":"The value of * is","shift":"The shift (x) of *'s values is","variance":"The scale (x) of *'s variance (x*variance) is"}
         ## track record of interactions
         self.intervention_selection = [] # List of (i_type,i_var)
         self.slider_selection = {} # Dict (<idx in self.intervention_selection>: List of idx to slider values)
@@ -56,31 +60,31 @@ class Widget_Single_Matrix():
         ## Atomic
         if "atomic" in self.action_vars:       
             self.w_a = pn.widgets.RadioBoxGroup(name ='varsRadios', options = self.action_vars["atomic"], inline=True, value = "")     
-            if self.single_intervention and self.status == "animated":
-                title = pn.pane.Markdown(''' Click to start the animation ''', style={'font-size': "18px",'margin-bottom': '0px'})
-            else:                
-                title = pn.pane.Markdown(''' Atomic Intervention (set the value) ''', style={'font-size': "18px",'margin-bottom': '0px'})
+            # if self.single_intervention and self.status == "animated":
+            #     title = pn.pane.Markdown(''' Click to start the animation ''', style=self.style)
+            # else:                
+            title = pn.pane.Markdown(''' Atomic Intervention (set the value) ''', style=self.style, width=self.width)
             self.widget_box.append(pn.WidgetBox(title, self.w_a))
         ## Shift
         if "shift" in self.action_vars:
             self.w_s = pn.widgets.RadioBoxGroup(name ='varsRadios', options = self.action_vars["shift"], inline=True, value = "")
-            if self.single_intervention and self.status == "animated":
-                title = pn.pane.Markdown(''' Click to start the animation ''', style={'font-size': "18px",'margin-bottom': '0px'})
-            else:                
-                title = pn.pane.Markdown(''' Shift Intervention (shift all values by x) ''', style={'font-size': "18px",'margin-bottom': '0px'})
+            # if self.single_intervention and self.status == "animated":
+            #     title = pn.pane.Markdown(''' Click to start the animation ''', style=self.style)
+            # else:                
+            title = pn.pane.Markdown(''' Shift Intervention (shift all values by x) ''', style=self.style, width=self.width)
             self.widget_box.append(pn.WidgetBox(title, self.w_s))
         ## Variance
         if "variance" in self.action_vars:
             self.w_v = pn.widgets.RadioBoxGroup(name ='varsRadios', options = self.action_vars["variance"], inline=True, value = "")
-            if self.single_intervention and self.status == "animated":
-                title = pn.pane.Markdown(''' Select the variable below to start the animation ''', style={'font-size': "18px",'margin-bottom': '0px'})
-            else:                
-                title = pn.pane.Markdown(''' Variance Intervention (scale variance by x) ''', style={'font-size': "18px",'margin-bottom': '0px'})
+            # if self.single_intervention and self.status == "animated":
+            #     title = pn.pane.Markdown(''' Select the variable below to start the animation ''', style=self.style)
+            # else:                
+            title = pn.pane.Markdown(''' Variance Intervention (scale variance by x) ''', style=self.style, width=self.width)
             self.widget_box.append(pn.WidgetBox(title, self.w_v))
         ## Stratify
         if "stratify" in self.action_vars:
             self.w_str = pn.widgets.RadioBoxGroup(name ='varsRadios', options = self.action_vars["stratify"], inline=True, value = "")
-            title = pn.pane.Markdown('''Variables''', style={'font-size': "18px",'margin-bottom': '0px'})
+            title = pn.pane.Markdown('''Variables''', style=self.style)
             self.widget_box.append(pn.WidgetBox(title, self.w_str))
         ## WIDGETS
         ## Toggle buttons

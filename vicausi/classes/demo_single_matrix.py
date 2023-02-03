@@ -36,6 +36,10 @@ class Demo_Single_Matrix():
         self.action_vars = action_vars
         self.showData = showData   
         ##
+        self.width = 550
+        self.font_size = "16px"
+        self.style = {'font-size': self.font_size,'margin-bottom': '0px','margin-top': '-5px','top':'0px','height':'40px'}
+        ##
         if len(self.action_vars) == 1 and len(list(self.action_vars.values())[0]) == 1:
             self.single_intervention = True
         else:
@@ -59,12 +63,15 @@ class Demo_Single_Matrix():
         self.data = Data(self.files)       
         ## Create DAGs   
         causal_dags_ids = self.data.get_causal_dags_ids()
-        causal_dags_obj = [Causal_DAG(self.data, dag_id, self.var_order) for dag_id in causal_dags_ids]
+        causal_dags_obj = [Causal_DAG(self.data, dag_id, self.status, self.var_order) for dag_id in causal_dags_ids]
         # causal_dags_obj = [Causal_DAG(self.data, dag_id, self.var_order) for dag_id in self.dags_presented]
         ## Markdowns
         t_graphs = pn.pane.Markdown('''## Simulated Data of an Unidentified Causal Model''')
-        t_dags = pn.pane.Markdown('''## Possible Causal Models''')
-        t_interaction = pn.pane.Markdown('''Select an intervention above to see the simulated data of the intervention.''', style={'font-size': "18px",'margin-bottom': '0px'})
+        t_dags = pn.pane.Markdown(''' *DAGs of Possible Causal Models*''', style=self.style)
+        if self.single_intervention and self.status == "animated":
+            t_radio = pn.pane.Markdown('''*Select the intervention to start the animation of the simulated data of the intervention.*''', style=self.style)
+        elif self.single_intervention == False:
+            t_radio = pn.pane.Markdown('''*Select an intervention to see the simulated data of the intervention.*''', style=self.style)
         ## Create Widget object
         interv_data = self.data.get_interventions(self.dag_id) ## Dict (<itype>: Dict(<var>:List/numpy array of samples))
         self.widget = Widget_Single_Matrix(self.status, self.action_vars, {itype:interv_data[itype] for itype in self.action_vars if itype in interv_data})
@@ -74,26 +81,38 @@ class Demo_Single_Matrix():
         self.widget.register_callbacks_to_dags(causal_dags_obj)
         self.widget.register_callbacks_to_cells([grid_obs])
         ## DIAGRAMS - FIGURES 
+        ## DAGS col
         dags_cols = [pn.Column(pn.pane.Bokeh(causal_dags_obj[i].get_plot())) for i,_ in enumerate(causal_dags_obj)]
+        dags_col = pn.Column(t_dags,*dags_cols)
+        ## GRID col
         if self.status not in ["static"]:
-            grids_col = pn.Column(pn.Column(self.widget.slider, css_classes=['panel-widget-box'], width = 550), grid_obs.get_grid())
+            grids_col = pn.Column(pn.Column(self.widget.slider, css_classes=['panel-widget-box'], width = self.width), grid_obs.get_grid())
         else:
             grids_col = pn.Row(grid_obs.get_grid(),pn.pane.Bokeh(grid_obs.cells[self.var_order[-1]][-1].plot_colorbar))
+        ## WIDGET BOX col
+        if (self.single_intervention and self.status == "animated") or (self.single_intervention == False):
+            widget_boxes = self.widget.get_widget_box()
+            widget_col = pn.Column(t_radio,*widget_boxes, css_classes=['panel-widget-box'])
+            widget_row = pn.Column(t_radio, pn.Row(*widget_boxes, css_classes=['panel-widget-box']))
         if self.single_intervention:            
             ## PLOT
             if self.status not in ["animated"]:  
-                self._activate_radio_button_if_single_inter(self.widget)                              
-                self.plot = pn.Row(pn.Column(t_graphs, grids_col, self.widget.toggle3), pn.Column(t_dags,*dags_cols))
+                self._activate_radio_button_if_single_inter(self.widget)   
+                self.plot = pn.Column(t_graphs, pn.Row(pn.Column(grids_col, self.widget.toggle3), dags_col))                           
+                # self.plot = pn.Row(pn.Column(t_graphs, grids_col, self.widget.toggle3), dags_col)
             else:
-                widget_boxes = self.widget.get_widget_box() 
-                self.plot = pn.Row(pn.Column(t_graphs,pn.Column(*widget_boxes, css_classes=['panel-widget-box']), grids_col), pn.Column(t_dags,*dags_cols))
+                # widget_boxes = self.widget.get_widget_box() 
+                self.plot = pn.Column(t_graphs,widget_row, pn.Row(grids_col, dags_col))
+                # self.plot = pn.Row(pn.Column(t_graphs,widget_col, grids_col), dags_col)
         else:                
             ## PLOT
-            widget_boxes = self.widget.get_widget_box() 
-            if self.status not in ["animated"]:               
-                self.plot = pn.Row(pn.Column(t_graphs,pn.Column(*widget_boxes, css_classes=['panel-widget-box']),t_interaction,grids_col,self.widget.no_i_button), pn.Column(t_dags,*dags_cols))
-            else:               
-                self.plot = pn.Row(pn.Column(t_graphs,pn.Column(*widget_boxes, css_classes=['panel-widget-box']),t_interaction,grids_col), pn.Column(t_dags,*dags_cols))
+            # widget_boxes = self.widget.get_widget_box() 
+            if self.status not in ["animated"]:       
+                self.plot = pn.Column(t_graphs,widget_row,pn.Row(pn.Column(grids_col,self.widget.no_i_button),dags_col))        
+                # self.plot = pn.Row(pn.Column(t_graphs,widget_col,t_interaction,grids_col,self.widget.no_i_button), dags_col)
+            else:        
+                self.plot = pn.Column(t_graphs,widget_row,pn.Row(grids_col,dags_col))       
+                # self.plot = pn.Row(pn.Column(t_graphs,widget_col,t_interaction,grids_col), dags_col)
     
     def _activate_radio_button_if_single_inter(self, widget):  
         i_type = list(self.action_vars.keys())[0]

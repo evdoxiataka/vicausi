@@ -1,4 +1,4 @@
-from ..utils.constants import COLORs_sim, BASE_COLOR#BORDER_COLOR, COLORs, 
+from ..utils.constants import BASE_COLOR, SECONDARY_COLOR, STATIC_BASE_COLOR
 
 import networkx as nx
 from bokeh.plotting import figure
@@ -8,7 +8,7 @@ import panel as pn
 pn.extension()
 
 class Causal_DAG():
-    def __init__(self, data, dag_id, var_order, mean_obs = False): # status, showData = True
+    def __init__(self, data, dag_id, status, var_order): # status, showData = True , mean_obs = False
         """
             Parameters:
             --------
@@ -19,11 +19,20 @@ class Causal_DAG():
         self.dag_id = dag_id
         self.dag = data.get_dag_by_id(dag_id) ## A Dict(<var>: List of ancestor vars).
         self.var_order = var_order
-        self.mean_obs = mean_obs
-        if self.mean_obs:
-            self.base_color = BASE_COLOR
-        else:
-            self.base_color = BASE_COLOR
+        self.status = status
+        ##
+        self.title_font_size = "16px"
+        self.labels_font_size = "14px"
+        ##
+        self.base_color = BASE_COLOR
+        self.second_color = SECONDARY_COLOR
+        if self.status == "static":
+            self.base_color = STATIC_BASE_COLOR
+        # self.mean_obs = mean_obs
+        # if self.mean_obs:
+        #     self.base_color = BASE_COLOR
+        # else:
+        #     self.base_color = BASE_COLOR
         ##
         self.plot = None
         ##
@@ -34,12 +43,16 @@ class Causal_DAG():
         self.initialize_plot()
 
     def initialize_plot(self):
-        self.plot = figure(width = 300, height = 250, x_range = (-1.2, 1.6), y_range = (-1.1, 1.2),
+        ## FIGURE
+        self.plot = figure(width = 260, height = 210, x_range = (-1.25, 1.6), y_range = (-1.1, 1.2),
                   x_axis_location = None, y_axis_location = None, toolbar_location = None, background_fill_color = None, outline_line_color = None,
                   title="Causal Model"+" "+str(self.dag_id + 1))##BORDER_COLOR
         self.plot.grid.grid_line_color = None
         self.plot.title.align = "center"
-        self.plot.title.text_font_size = "18px"
+        self.plot.title.text_font_size = self.title_font_size
+        # self.plot.margin = 0
+        # self.plot.min_border = 0
+        # self.plot.frame_width=0
         ##
         graph = self._create_digraph()
         pos = nx.planar_layout(graph)
@@ -69,7 +82,7 @@ class Causal_DAG():
         self.plot.circle(x='x', y='y', source = self.nodes_cds, size=18., fill_color='color', line_color='color', alpha=1., name = 'node')
         # LABELS
         self.labels_cds = ColumnDataSource({'x': x, 'y': y,'name': [i for i in pos]})
-        self.plot.add_layout(LabelSet(x='x', y='y', text='name', source = self.labels_cds, x_offset=-20, y_offset=10, text_font_size="14pt"))
+        self.plot.add_layout(LabelSet(x='x', y='y', text='name', source = self.labels_cds, x_offset=-20, y_offset=10, text_font_size=self.labels_font_size))
 
     def update_plot(self, i_vars, i_type = None):
         """
@@ -97,12 +110,12 @@ class Causal_DAG():
             self.nodes_cds.data =  new_node_data
         else:
             if i_type == "atomic":
-                new_edge_data['color'] = [COLORs_sim[1] if i_var in i_vars else self.base_color for i_var in self.edges_cds.data['stop_n']]
+                new_edge_data['color'] = [self.second_color if i_var in i_vars else self.base_color for i_var in self.edges_cds.data['stop_n']]
                 new_edge_data['line_dash'] = ['dashed' if i_var in i_vars else 'solid' for i_var in self.edges_cds.data['stop_n']]
                 for i_var in self.edges_cds.data['stop_n']:
                     if i_var in i_vars:
-                        self.plot.select(tags=[i_var]).end.line_color = COLORs_sim[1]#COLORs_sim[self.dag_id] 
-                        self.plot.select(tags=[i_var]).end.fill_color = COLORs_sim[1]#COLORs_sim[self.dag_id] 
+                        self.plot.select(tags=[i_var]).end.line_color = self.second_color#COLORs_sim[self.dag_id] 
+                        self.plot.select(tags=[i_var]).end.fill_color = self.second_color#COLORs_sim[self.dag_id] 
                     else:
                         self.plot.select(tags=[i_var]).end.line_color = self.base_color
                         self.plot.select(tags=[i_var]).end.fill_color =self.base_color
@@ -114,7 +127,7 @@ class Causal_DAG():
                     self.plot.select(tags=[i_var]).end.fill_color = self.base_color
             self.edges_cds.data = new_edge_data
             ##
-            new_node_data['color'] = [COLORs_sim[1]  if n in i_vars else self.base_color for n in self.nodes_cds.data['name']]
+            new_node_data['color'] = [self.second_color  if n in i_vars else self.base_color for n in self.nodes_cds.data['name']]
             self.nodes_cds.data =  new_node_data
 
     ## HELPERS

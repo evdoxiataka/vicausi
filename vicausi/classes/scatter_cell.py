@@ -1,4 +1,4 @@
-from ..utils.constants import BORDER_COLOR, num_i_values
+from ..utils.constants import BORDER_COLOR, num_i_values, BASE_COLOR, SECONDARY_COLOR, STATIC_BASE_COLOR
 from ..utils.functions import retrieve_intervention_info
 
 from bokeh.plotting import figure
@@ -25,6 +25,11 @@ class Scatter_Cell():
         self.status = status
         self.showData = showData
         ##
+        self.base_color = BASE_COLOR
+        self.second_color = SECONDARY_COLOR
+        if self.status == "static":
+            self.base_color = STATIC_BASE_COLOR
+        ##
         self.plot = None
         ## 
         self.var_type1 = self.data.get_var_type(self.var1)
@@ -47,17 +52,18 @@ class Scatter_Cell():
         self.initialize_plot()
 
     def initialize_plot(self):
-        ## scatter plot cds
+        ## CDS
+        ## SCATTER PLOTs
         self.scatter_obs_cds = ColumnDataSource(data = {'x':self.pp_samples1,'y':self.pp_samples2})
         if self.status not in ["static"]:
             self.scatter_interv_cds = ColumnDataSource(data = {'x':[],'y':[]})
         else:
             self.scatter_interv_cds = ColumnDataSource(data = {'x':[],'y':[],"group":[]})
-        ## pairs of observations
+        ## OBSERVAIONS
         if self.showData:
             self.data_pairs_cds = ColumnDataSource(data = {'x':self.observations1,'y':self.observations2}) 
-        ## FIGURE and glyphs
-        self.plot = figure(width = 420, height = 420, x_range = self.x_range_var1, y_range = self.x_range_var2, tools = [])
+        ## FIGURE
+        self.plot = figure(width = 420, height = 420, tools = [], x_range = self.x_range_var1, y_range = self.x_range_var2)#, lod_factor = 1, lod_threshold = 10000000
         self.plot.xaxis[0].axis_label = self.var1
         self.plot.yaxis[0].axis_label = self.var2
         self.plot.xaxis[0].ticker.desired_num_ticks = 4
@@ -70,16 +76,17 @@ class Scatter_Cell():
         self.plot.border_fill_color = BORDER_COLOR
         self.plot.min_border = 14
         self.plot.toolbar.logo = None
-        ## SCATTER PLOT
-        self.pp_circle = self.plot.circle('x', 'y', size = 1, color = 'blue', source = self.scatter_obs_cds, fill_alpha = 1)
+        ## GLYPHS
+        self.pp_circle = self.plot.circle('x', 'y', size = 1, color = self.base_color, source = self.scatter_obs_cds)
+        print(self.pp_circle.level)
         if self.showData:
-            self.obs_circle = self.plot.circle('x', 'y', size = 5, color = '#00CCFF', source = self.data_pairs_cds, fill_alpha = 1)
+            self.obs_circle = self.plot.circle('x', 'y', size = 5, color = '#00CCFF', source = self.data_pairs_cds)
         if self.status not in ['static']:
-            self.i_pp_circle = self.plot.circle('x', 'y', size = 1, color = 'orange', source = self.scatter_interv_cds, fill_alpha = 1)
+            self.i_pp_circle = self.plot.circle('x', 'y', size = 1, color = self.second_color, source = self.scatter_interv_cds)
         else:
             mapper = linear_cmap(field_name = 'group', palette = cc.b_linear_bmy_10_95_c71, low = 0, high = num_i_values-1)
             # mapper = linear_cmap(field_name = 'group', palette = cc.b_rainbow_bgyrm_35_85_c69[29:], low = 0, high = num_i_values-1)#cc.b_rainbow_bgyrm_35_85_c69
-            self.i_pp_circle = self.plot.circle('x', 'y', size = 1, color = mapper, source = self.scatter_interv_cds, fill_alpha = 1)
+            self.i_pp_circle = self.plot.circle('x', 'y', size = 1, color = mapper, source = self.scatter_interv_cds)
         
     def update_plot(self, intervention, i_type):
         """
