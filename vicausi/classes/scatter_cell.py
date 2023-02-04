@@ -78,7 +78,6 @@ class Scatter_Cell():
         self.plot.toolbar.logo = None
         ## GLYPHS
         self.pp_circle = self.plot.circle('x', 'y', size = 1, color = self.base_color, source = self.scatter_obs_cds)
-        print(self.pp_circle.level)
         if self.showData:
             self.obs_circle = self.plot.circle('x', 'y', size = 5, color = '#00CCFF', source = self.data_pairs_cds)
         if self.status not in ['static']:
