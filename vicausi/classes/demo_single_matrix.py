@@ -131,6 +131,15 @@ class Demo_Single_Matrix():
     ## GETTERS
     def get_plot(self):
         return self.plot
+	
+    def get_toggle_clicks(self):
+        return self.widget_obj.toggle_clicks
+		
+    def get_intervention_selection(self):
+        return self.widget_obj.intervention_selection
+		
+    def get_slider_selection(self):
+        return self.widget_obj.slider_selection
 
     def get_first_dag(self):
         return pn.pane.Bokeh(self.dag_objs[0].get_plot())
