@@ -71,9 +71,9 @@ class Demo_Single_Matrix():
         t_graphs = pn.pane.Markdown('''## Simulated Data of an Unidentified Causal Model''')
         t_dags = pn.pane.Markdown(''' *DAGs of Possible Causal Models*''', style=self.style)
         if self.single_intervention and self.status == "animated":
-            t_radio = pn.pane.Markdown('''*Select the intervention to start the animation of the simulated data of the intervention.*''', style=self.style)
+            t_radio = pn.pane.Markdown('''*Select the intervention to start the animation of the simulated data of the intervention.*''', style=self.style, width = self.width)
         elif self.single_intervention == False:
-            t_radio = pn.pane.Markdown('''*Select an intervention to see the simulated data of the intervention.*''', style=self.style)
+            t_radio = pn.pane.Markdown('''*Select an intervention to see the simulated data of the intervention.*''', style=self.style, width = self.width)
         ## Create Widget object
         interv_data = self.data.get_interventions(self.dag_id) ## Dict (<itype>: Dict(<var>:List/numpy array of samples))
         self.widget_obj = Widget_Single_Matrix(self.status, self.action_vars, {itype:interv_data[itype] for itype in self.action_vars if itype in interv_data})
