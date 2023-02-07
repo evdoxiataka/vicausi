@@ -6,12 +6,11 @@ hdi_magn = 0.6
 shift_i_magn = 1.
 slider_tick_num = 50
 
-## inference constants
-samples = 2000
-chains = 1
-tune = 2000
-pp_samples = 20
-sim_i_pp_samples = 6
+## num of i instances presented in static condition
+num_i_values = 6
+
+##
+stratification_window_magn = 0.2
 
 ## KDE plots' constants
 DATA_SIZE = 6
@@ -22,3 +21,10 @@ IMPULSE_SHAPE = 20
 DATA_HGH_NUM = 5 #number of observations to highlight while slider always odd number
 BORDER_COLOR ='#efefef'
 COLS_PER_VAR = 2
+COLORs = ['#252525','#969696','#cccccc','#f7f7f7']#
+
+##
+BASE_COLOR = "blue"
+SECONDARY_COLOR = "#FF6700"
+STATIC_BASE_COLOR = "#00b300"
+COLORs_sim = ['#1f77b4','#ff7f0e','#2ca02c','#d62728','#9467bd','#8c564b','#e377c2','#7f7f7f','#bcbd22','#17becf'] #['#aec7e8','#ffbb78','#98df8a','#ff9896','#c5b0d5','#c49c94','#f7b6d2','#c7c7c7','#dbdb8d','#9edae5']

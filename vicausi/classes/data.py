@@ -1,6 +1,6 @@
 import numpy as np
 import json
-from ..utils.constants import x_range_mag
+from ..utils.constants import x_range_mag, stratification_window_magn
 
 class Data():
 
@@ -72,7 +72,8 @@ class Data():
                 if i_var not in self.observations:
                     self.observations[i_var] = inf_data[header_js["inference_data"]["constant_data"]['vars'][i_var.upper()]["array_name"]]
         ## estimate var x_range across models
-        self._estimate_x_range_across_models()
+        # self._estimate_x_range_across_models()
+        self._estimate_x_range()
         
     def get_graph(self, header_js):
         graph = header_js["inference_data"]["sample_stats"]["attrs"]["graph"]
@@ -101,7 +102,69 @@ class Data():
             return graph[var_name]["distribution"]["dist"]
         else:
             return graph[var_name]["type"]
-        
+
+    def _estimate_x_range(self):
+        self.causal_inference['x_range'] = {}
+        self.causal_inference['x_range']['pp_samples'] = {}
+        self.causal_inference['x_range']['ia_samples'] = {}
+        self.causal_inference['x_range']['is_samples'] = {}
+        self.causal_inference['x_range']['iv_samples'] = {}
+        for var in self.observations:
+            x_range_min = None
+            x_range_max = None
+            x_range_ia_var_min = {}
+            x_range_ia_var_max = {}
+            x_range_is_var_min = {}
+            x_range_is_var_max = {}
+            x_range_iv_var_min = {}
+            x_range_iv_var_max = {}
+            for i in self.causal_inference['dags']:
+                if i not in self.causal_inference['x_range']['pp_samples']:
+                    self.causal_inference['x_range']['pp_samples'][i] = {}
+                    self.causal_inference['x_range']['ia_samples'][i] = {}
+                    self.causal_inference['x_range']['is_samples'][i] = {}
+                    self.causal_inference['x_range']['iv_samples'][i] = {}
+                ## pp_samples
+                if var in self.causal_inference['dags'][i]['pp_samples']:
+                    x_range_min = self.causal_inference['dags'][i]['pp_samples'][var].min()
+                    x_range_max = self.causal_inference['dags'][i]['pp_samples'][var].max()
+                ## atomic intervention
+                for i_var in self.causal_inference['dags'][i]['ia_samples']:
+                    if var in self.causal_inference['dags'][i]['ia_samples'][i_var]:
+                        x_range_ia_var_min[i_var] = min([x_range_min,np.array(self.causal_inference['dags'][i]['ia_samples'][i_var][var]).min()]).tolist()
+                        x_range_ia_var_max[i_var]= max([x_range_max,np.array(self.causal_inference['dags'][i]['ia_samples'][i_var][var]).max()]).tolist()
+                ## shift
+                for i_var in self.causal_inference['dags'][i]['is_samples']:
+                    if var in self.causal_inference['dags'][i]['is_samples'][i_var]:
+                        x_range_is_var_min[i_var] = min([x_range_min, np.array(self.causal_inference['dags'][i]['is_samples'][i_var][var]).min()]).tolist()
+                        x_range_is_var_max[i_var] = max([x_range_max, np.array(self.causal_inference['dags'][i]['is_samples'][i_var][var]).max()]).tolist()
+                        x_range_iv_var_min[i_var] = min([x_range_min,np.array(self.causal_inference['dags'][i]['iv_samples'][i_var][var]).min()]).tolist()
+                        x_range_iv_var_max[i_var] = max([x_range_max,np.array(self.causal_inference['dags'][i]['iv_samples'][i_var][var]).max()]).tolist()
+                ## var x_range of pp_samples
+                self.causal_inference['x_range']['pp_samples'][i][var] = (x_range_min-x_range_mag*abs(x_range_max-x_range_min),x_range_max+x_range_mag*abs(x_range_max-x_range_min))
+                ## var x_range of ia_samples
+                for i_var in x_range_ia_var_min:
+                    var_min = x_range_ia_var_min[i_var]
+                    var_max = x_range_ia_var_max[i_var]
+                    if i_var not in self.causal_inference['x_range']['ia_samples'][i]:
+                        self.causal_inference['x_range']['ia_samples'][i][i_var] = {}
+                    self.causal_inference['x_range']['ia_samples'][i][i_var][var] = (var_min-x_range_mag*abs(var_max-var_min),var_max+x_range_mag*abs(var_max-var_min))
+                ## var x_range of is_samples
+                for i_var in x_range_is_var_min:
+                    ## shift
+                    var_min = x_range_is_var_min[i_var]
+                    var_max = x_range_is_var_max[i_var]
+                    if i_var not in self.causal_inference['x_range']['is_samples'][i]:
+                        self.causal_inference['x_range']['is_samples'][i][i_var] = {}
+                    self.causal_inference['x_range']['is_samples'][i][i_var][var] = (var_min-x_range_mag*abs(var_max-var_min),var_max+x_range_mag*abs(var_max-var_min))
+                    ## variance
+                    var_min = x_range_iv_var_min[i_var]
+                    var_max = x_range_iv_var_max[i_var]
+                    if i_var not in self.causal_inference['x_range']['iv_samples'][i]:
+                        self.causal_inference['x_range']['iv_samples'][i][i_var] = {}
+                    self.causal_inference['x_range']['iv_samples'][i][i_var][var] = (var_min-x_range_mag*abs(var_max-var_min),var_max+x_range_mag*abs(var_max-var_min))
+
+
     def _estimate_x_range_across_models(self):
         self.causal_inference['x_range'] = {}
         self.causal_inference['x_range']['pp_samples'] = {}
@@ -171,8 +234,10 @@ class Data():
                 self.causal_inference['x_range']['iv_samples'][i_var][var] = (var_min-x_range_mag*abs(var_max-var_min),var_max+x_range_mag*abs(var_max-var_min))
 
     ## GETTERS-SETTERS
-    def get_interventions(self):
-        return self.atomic_interventions, self.shift_interventions, self.variance_interventions
+    def get_interventions(self, dag_id):
+        pp_samples = self.causal_inference['dags'][dag_id]['pp_samples']
+        str_inter_data = {var: np.arange(min(pp_samples[var].flatten()),max(pp_samples[var].flatten()),(max(pp_samples[var].flatten())-min(pp_samples[var].flatten())+1)/len(self.atomic_interventions[var])).tolist() for var in pp_samples}
+        return {"atomic":self.atomic_interventions, "shift":self.shift_interventions, "variance":self.variance_interventions,"stratify":str_inter_data}
     
     def get_causal_dags_ids(self):
          return [i for i in self.causal_inference['dags']]
@@ -180,6 +245,9 @@ class Data():
     def get_dag_by_id(self, dag_id):
         return self.causal_inference['dags'][dag_id]['dag']
     
+    def get_dags(self):
+        return [self.causal_inference['dags'][i]['dag'] for i in self.causal_inference['dags']]
+
     def get_var_type(self, var):
         if var in self.causal_inference["vars"]:
             return self.causal_inference["vars"][var]["type"]
@@ -197,14 +265,24 @@ class Data():
             return self.causal_inference['dags'][dag_id]['pp_samples'][var]
         else:
             return None
-        
-    def get_var_x_range(self, var):
-        if var in self.causal_inference['x_range']['pp_samples']:
-            return self.causal_inference['x_range']['pp_samples'][var]
+
+    def get_var_pp_samples_idx(self, var, dag_id, window_median): 
+        if var in self.causal_inference['dags'][dag_id]['pp_samples']:
+            pp_samples = self.causal_inference['dags'][dag_id]['pp_samples'][var].flatten()
+            offset = stratification_window_magn*(max(pp_samples) - min(pp_samples))/2
+            window_min = window_median - abs(offset)
+            window_max = window_median + abs(offset)
+            return np.where((pp_samples > window_min) & (pp_samples < window_max))
         else:
             return None
         
-    def get_var_i_x_range(self, var, i_var, i_type):
+    def get_var_x_range(self, dag_id, var):
+        if dag_id in self.causal_inference['x_range']['pp_samples'] and var in self.causal_inference['x_range']['pp_samples'][dag_id]:
+            return self.causal_inference['x_range']['pp_samples'][dag_id][var]
+        else:
+            return None
+        
+    def get_var_i_x_range(self, dag_id, var, i_var, i_type):
         """
         Parameters:
         -----------
@@ -217,8 +295,8 @@ class Data():
             samples_type = "is_samples"
         elif i_type == "variance":
             samples_type = "iv_samples"
-        if samples_type!="" and i_var in self.causal_inference['x_range'][samples_type] and var in self.causal_inference['x_range'][samples_type][i_var]:
-            return self.causal_inference['x_range'][samples_type][i_var][var]
+        if samples_type!="" and dag_id in self.causal_inference['x_range'][samples_type] and i_var in self.causal_inference['x_range'][samples_type][dag_id] and var in self.causal_inference['x_range'][samples_type][dag_id][i_var]:
+            return self.causal_inference['x_range'][samples_type][dag_id][i_var][var]
         else:
             return None
         

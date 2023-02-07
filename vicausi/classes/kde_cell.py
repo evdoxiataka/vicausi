@@ -1,8 +1,11 @@
 from ..utils.functions import kde, pmf, get_data_hgh_indices, retrieve_intervention_info
-from ..utils.constants import DATA_SIZE, DATA_DIST_RATIO, RUG_DIST_RATIO, RUG_SIZE, BORDER_COLOR, DATA_HGH_NUM
+from ..utils.constants import DATA_SIZE, DATA_DIST_RATIO, RUG_DIST_RATIO, RUG_SIZE, BORDER_COLOR, DATA_HGH_NUM, num_i_values, BASE_COLOR, SECONDARY_COLOR, STATIC_BASE_COLOR
 
 from bokeh.plotting import figure
-from bokeh.models import ColumnDataSource
+from bokeh.models import ColumnDataSource, ColorBar,LinearColorMapper
+from bokeh.palettes import Oranges256, Magma256, Viridis256, Turbo256
+import colorcet as cc
+from bokeh.models import NumeralTickFormatter,BasicTicker
 
 import numpy as np
 
@@ -19,13 +22,19 @@ class KDE_Cell():
         self.status = status   
         self.showData = showData
         ##
+        self.base_color = BASE_COLOR
+        self.second_color = SECONDARY_COLOR
+        if self.status == "static":
+            self.base_color = STATIC_BASE_COLOR
+        ##
         self.plot = None
+        self.plot_colorbar = None
         ## 
         self.var_type = self.data.get_var_type(self.var)
         self.pp_samples = self.data.get_var_pp_samples(self.var, self.dag_id) ## numpy array of posterior predictive samples
         if self.showData:
             self.observations = self.data.get_var_observations(self.var) ## 
-        self.x_range = self.data.get_var_x_range(self.var)
+        self.x_range = self.data.get_var_x_range(self.dag_id, self.var)
         ## 
         self.kde_obs_cds = None
         self.kde_interv_cds = None
@@ -46,49 +55,81 @@ class KDE_Cell():
         self.initialize_plot()
 
     def initialize_plot(self):
-        ## KDE cds
+        ## CDS
+        ## KDE
         if self.var_type == "Continuous":
             kde_est = kde(self.pp_samples)   
             self.kde_obs_cds = ColumnDataSource(data={'x':kde_est['x'],'y':kde_est['y']})
-            self.kde_interv_cds = ColumnDataSource(data={'x':[],'y':[]})
+            if self.status not in ["static"]:
+                self.kde_interv_cds = ColumnDataSource(data={'x':[],'y':[]})
+            else:
+                self.kde_interv_cds = ColumnDataSource(data={'x':[],'y':[],"group":[]})
         else:
             kde_est = pmf(self.pp_samples)
             self.kde_obs_cds = ColumnDataSource(data={'x':kde_est['x'],'y':kde_est['y'],'y0':kde_est['y0']})
             self.kde_interv_cds = ColumnDataSource(data={'x':[],'y':[],'y0':[]})                    
-        ## Observvations cds
+        ## OBSERVATIONS
         max_v = self.kde_obs_cds.data['y'].max()
         if self.showData:
             self.data_cds = ColumnDataSource(data={'x':self.observations,'y':np.asarray([-1*max_v/DATA_DIST_RATIO]*len(self.observations))})
             self.data_cds_hghl = ColumnDataSource(data = {'x':np.asarray([]),'y':np.asarray([])})
             self.data_cds_left = ColumnDataSource(data = {'x':self.observations,'y':np.asarray([-1*max_v/DATA_DIST_RATIO]*len(self.observations))})
-        ## Rug plot cds
+        ## RUG PLOT
         if self.var_type == "Continuous":
             r_data = self.pp_samples.flatten()
             self.rug_obs_cds = ColumnDataSource(data = {'x':r_data,'y':np.asarray([-1*max_v/RUG_DIST_RATIO]*len(r_data)),'size':np.asarray([RUG_SIZE]*len(r_data))})
-        ## FIGURE and glyphs
-        self.plot = figure(width = 400, height = 400, x_range = self.x_range, tools = "wheel_zoom,reset,box_zoom")
+        ## FIGURE
+        self.plot = figure(width = 420, height = 420, tools = [], x_range = self.x_range)#"wheel_zoom,reset,box_zoom" 
+        self.plot.xaxis.axis_label_text_font_size = "13pt"
+        self.plot.xaxis.major_label_text_font_size = "11pt"
+        # self.plot.axis.axis_label_text_font_style = 'bold'        
         self.plot.yaxis.visible = False
         self.plot.xaxis[0].axis_label = self.var
+        self.plot.xaxis[0].ticker.desired_num_ticks = 4
         self.plot.border_fill_color = BORDER_COLOR
-        self.plot.min_border = 15
+        self.plot.min_border = 14
         self.plot.toolbar.logo = None
-        ## KDE
+        ## KDE GLYPHS
         if self.var_type == "Continuous":
-            self.pp_line = self.plot.line(x='x', y='y', line_width=2, line_color = 'blue', source = self.kde_obs_cds)
-            self.i_pp_line = self.plot.line(x='x', y='y', line_width=2, line_color = 'orange', source = self.kde_interv_cds)
+            self.pp_line = self.plot.line(x='x', y='y', line_width=2, line_color = self.base_color, source = self.kde_obs_cds)
+            if self.status not in ['static']:
+                self.i_pp_line = self.plot.line(x='x', y='y', line_width=2, line_color = self.second_color, source = self.kde_interv_cds)
+            else:
+                mapper = LinearColorMapper(palette = cc.b_linear_bmy_10_95_c71, low = 0, high = num_i_values-1)
+                # mapper = LinearColorMapper(palette = cc.b_rainbow_bgyrm_35_85_c69[29:], low = 0, high = num_i_values-1)
+                self.i_pp_line = self.plot.multi_line(xs='x', ys='y', line_width=2, line_color = {"field":"group", "transform":mapper}, source = self.kde_interv_cds)
+                ## Dummy figure for colorbar
+                self.plot_colorbar = figure(height=600, width=0, title = "",title_location = "left",toolbar_location=None, min_border=0, outline_line_color=None)
+                self.plot_colorbar.title.align = "right"
+                self.plot_colorbar.title.text_font_size = "16px"
+                self.plot_colorbar.margin = 0
+                self.plot_colorbar.min_border = 0
+                self.plot_colorbar.frame_width=0
+                self.color_bar = ColorBar(color_mapper = mapper,
+                                    visible = False, 
+                                    label_standoff = 8, 
+                                    margin = 0,
+                                    padding = 0,
+                                    location = (0,0),
+                                    formatter = NumeralTickFormatter(format='0.00 a'),
+                                    ticker=BasicTicker(desired_num_ticks=30),
+                                    bar_line_color='black',
+                                    major_tick_line_color='black'
+                                    )                                 
+                self.plot_colorbar.add_layout(self.color_bar, 'right')
         else:
-            self.pp_line = self.plot.segment(x0 = 'x', y0 ='y0', x1 = 'x', y1 = 'y', source = self.kde_obs_cds, line_alpha = 1.0, color = "blue", line_width = 1)
-            self.pp_scat = self.plot.scatter('x', 'y', source = self.kde_obs_cds, size = 4, fill_color = "blue", fill_alpha = 1.0, line_color = "blue")
-            self.i_pp_line = self.plot.segment(x0 = 'x', y0 ='y0', x1 = 'x', y1 = 'y', source = self.kde_interv_cds, line_alpha = 0.5, color = "orange", line_width = 1)
-            self.i_pp_scat = self.plot.scatter('x', 'y', source = self.kde_interv_cds, size = 4, fill_color = "orange", fill_alpha = 0.5, line_color = "orange")
+            self.pp_line = self.plot.segment(x0 = 'x', y0 ='y0', x1 = 'x', y1 = 'y', source = self.kde_obs_cds, line_alpha = 1.0, color = self.base_color, line_width = 1)
+            self.pp_scat = self.plot.scatter('x', 'y', source = self.kde_obs_cds, size = 4, fill_color = self.base_color, fill_alpha = 1.0, line_color = self.base_color)
+            self.i_pp_line = self.plot.segment(x0 = 'x', y0 ='y0', x1 = 'x', y1 = 'y', source = self.kde_interv_cds, line_alpha = 0.5, color = self.second_color, line_width = 1)
+            self.i_pp_scat = self.plot.scatter('x', 'y', source = self.kde_interv_cds, size = 4, fill_color = self.second_color, fill_alpha = 0.5, line_color = self.second_color)
         ## DATA     
         if self.showData:
             self.obs_left = self.plot.asterisk('x', 'y', size = DATA_SIZE, line_color = '#00CCFF', source = self.data_cds_left)
-            self.obs_hghl = self.plot.asterisk('x', 'y', size = DATA_SIZE, line_color = 'orange', source = self.data_cds_hghl)
+            self.obs_hghl = self.plot.asterisk('x', 'y', size = DATA_SIZE, line_color = self.second_color, source = self.data_cds_hghl)
         ## RUG PLOT
         if self.var_type == "Continuous":
-            self.rug = self.plot.dash('x', 'y', size='size', angle = 90.0, angle_units = 'deg', line_color = 'blue', source = self.rug_obs_cds)   
-        
+            self.rug = self.plot.dash('x', 'y', size='size', angle = 90.0, angle_units = 'deg', line_color = self.base_color, source = self.rug_obs_cds)   
+
     def update_plot(self, intervention, i_type):
         """
         Parameters:
@@ -97,38 +138,88 @@ class KDE_Cell():
             i_type: String in {"atomic", "shift","variance"}
         """ 
         i_var, i_value_idx, i_value = retrieve_intervention_info(intervention)
-        samples = self.data.get_var_i_samples(i_var, self.var, self.dag_id, i_type)
-        if i_var and samples is not None:
-            if self.status in ["i_value","animated"] and self.var == i_var and i_type == "atomic":
-                data = np.array([samples[i_value_idx[0]][0][0][0]])
-                if self.showData:
-                    data_hgh_idx = get_data_hgh_indices(i_value[0], self.data_cds.data['x'], DATA_HGH_NUM)
-            elif self.status == "static":
-                data = samples
-                if self.showData:
-                    data_hgh_idx = []
-            else:
-                data = samples[i_value_idx]
-                if self.showData:
-                    data_hgh_idx = []
-            self.x_range = self.data.get_var_i_x_range(self.var, i_var, i_type)                
+        if i_type == "stratify":
+            samples_idx = self.data.get_var_pp_samples_idx(i_var, self.dag_id, i_value[0])
+            data = self.pp_samples.flatten()[samples_idx]
         else:
-            data = np.array([])
-            self.x_range = self.data.get_var_x_range(self.var)
-            if self.showData:
-                data_hgh_idx = []
-        ##
-        self.plot.x_range.start = self.x_range[0]
-        self.plot.x_range.end = self.x_range[1]
+            samples = self.data.get_var_i_samples(i_var, self.var, self.dag_id, i_type)
+            if i_var and samples is not None:
+                if self.status in ["i_value","animated"] and self.var == i_var and i_type == "atomic":
+                    ## when i_value takes single value and we take a window of values around it
+                    # i_idx = i_value_idx[0]
+                    # i_idx_min = i_idx
+                    # i_idx_max = i_idx
+                    # if i_idx - 1 >= 0:
+                    #     i_idx_min = i_idx - 1
+                    # if i_idx + 1 < len(samples):
+                    #     i_idx_max = i_idx + 2
+                    # data = np.array([samples[[[*range(i_idx_min, i_idx_max, 1)]]][0][0][0]])
+                    # ## when i_value is single value
+                    # data = np.array([samples[i_value_idx[0]][0][0][0]])
+                    ## when i_value takes values aroung a value
+                    data = samples[i_value_idx]
+                    if self.showData:
+                        data_hgh_idx = get_data_hgh_indices(i_value[0], self.data_cds.data['x'], DATA_HGH_NUM)
+                elif self.status == "static":
+                    data = samples
+                    # data = samples[[*range(0,len(samples),int(len(samples)/num_i_values))]]
+                    if self.showData:
+                        data_hgh_idx = []
+                else:
+                    data = samples[i_value_idx]
+                    if self.showData:
+                        data_hgh_idx = []
+                self.x_range = self.data.get_var_i_x_range(self.dag_id, self.var, i_var, i_type)                
+            else:
+                data = np.array([])
+                self.x_range = self.data.get_var_x_range(self.dag_id, self.var)
+                if self.showData:
+                    data_hgh_idx = []
+            ##
+            self.plot.x_range.start = self.x_range[0]
+            self.plot.x_range.end = self.x_range[1]
         ## KDE CDS
         if self.var_type == "Continuous":
-            kde_est = kde(data) 
-            self.kde_interv_cds.data = {'x':kde_est['x'],'y':kde_est['y']} 
+            if self.status not in ["static"]:
+                kde_est = kde(data) 
+                self.kde_interv_cds.data = {'x':kde_est['x'],'y':kde_est['y']} 
+            else:
+                x_list = []
+                y_list = []
+                group_id = []                
+                if len(data):
+                    i_values_edges = [*range(0,len(data),int(len(data)/num_i_values))]
+                    i_values = self.data.get_interventions(self.dag_id)
+                    mean_group_intev_values = [(i_values[i_type][i_var][i]+i_values[i_type][i_var][i+1])/2. for i in i_values_edges]
+                    for idx,_ in enumerate(i_values_edges):
+                        if idx == len(i_values_edges)-1:
+                            break
+                        idx1 = i_values_edges[idx]
+                        idx2 = i_values_edges[idx+1]
+                        kde_est = kde(data[[*range(idx1,idx2)]].flatten())
+                        x_list.append(kde_est['x'])
+                        y_list.append(kde_est['y'])                        
+                        group_id.append(mean_group_intev_values[idx])
+                        ##
+                        if i_type == "shift":
+                            self.plot_colorbar.title.text = i_var+" shift x"
+                        elif i_type == "variance":
+                            self.plot_colorbar.title.text = i_var+" variance x"
+                        else:
+                            self.plot_colorbar.title.text = i_var
+                        self.color_bar.color_mapper.high = max(mean_group_intev_values)
+                        self.color_bar.color_mapper.low = min(mean_group_intev_values)
+                        self.color_bar.visible = True
+                self.kde_interv_cds.data = {'x':x_list,'y':y_list,'group':group_id} 
+                ## COLORBAR
+                if len(x_list) == 0:
+                    self.plot_colorbar.title.text = ""
+                    self.color_bar.visible = False
         else:
             kde_est = pmf(data) 
-            self.kde_interv_cds.data = {'x':kde_est['x'],'y':kde_est['y'],'y0':kde_est['y0']} 
+            self.kde_interv_cds.data = {'x':kde_est['x'], 'y':kde_est['y'], 'y0':kde_est['y0']} 
         ## OBSERVATIONS CDS
-        max_v = np.concatenate((self.kde_obs_cds.data['y'], self.kde_interv_cds.data['y']), axis=None).max()
+        max_v = np.concatenate((self.kde_obs_cds.data['y'], np.array(self.kde_interv_cds.data['y']).flatten()), axis=None).max()
         if self.showData:
             data_obs = self.data_cds.data['x']
             if len(data_hgh_idx) == 0:
@@ -140,6 +231,10 @@ class KDE_Cell():
         ## RUG CDS
         if self.var_type == "Continuous":
             self.rug_obs_cds.data = {'x':self.pp_samples.flatten(), 'y':np.asarray([-1*max_v/RUG_DIST_RATIO]*len(self.pp_samples.flatten())),'size':np.asarray([RUG_SIZE]*len(self.pp_samples.flatten()))}    
+
+    ## CALLBACK
+    def set_empy_callback(self, attr, old, new):
+        pass
 
     ## SETTERS-GETTERS
     def get_plot(self):
