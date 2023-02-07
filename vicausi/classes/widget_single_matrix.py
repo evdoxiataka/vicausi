@@ -1,6 +1,7 @@
 from functools import partial
 from bokeh.models import Slider, Toggle
 import asyncio
+import time
 
 import panel as pn
 pn.extension()
@@ -20,6 +21,9 @@ class Widget_Single_Matrix():
         self.interventions_data = interventions_data
         self.action_vars = action_vars
         self.addToggles = addToggles
+        ##
+        self.tic =""
+        self.toc = ""
         ##
         self.width = 310
         self.font_size = "16px"
@@ -246,10 +250,16 @@ class Widget_Single_Matrix():
                 self.w_v.disabled = True
             ##
             interventions = self._retrieve_intervention_values(i_type)
-            for i,_ in enumerate(interventions[var]):                
+            
+            for i,_ in enumerate(interventions[var]):  
+                self.tic = time.perf_counter()              
                 pn.state.curdoc.add_next_tick_callback(partial(self.locked_update, i, var, i_type, interventions))
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(0.4)
+                self.toc = time.perf_counter()
+                # print(self.toc-self.tic,"sec")
             pn.state.curdoc.add_next_tick_callback(partial(self.locked_update, i+1, var, i_type, interventions))
+            
+            # print(len(interventions[var])/(self.toc-self.tic),"fps")
         
     def sel_var_update_slider(self, i_type, event):
         """
