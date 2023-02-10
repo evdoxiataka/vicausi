@@ -55,6 +55,8 @@ class Scatter_Matrix():
                     self.cells[var1+"$"+var2].append(cell)
                 ##Add to grid
                 self.grid[ start_point[0]:end_point[0], start_point[1]:end_point[1] ] = pn.Column(pn.pane.Bokeh(cell.get_plot()), width = 270, height = 270,sizing_mode = 'fixed')
+        ## add Legend
+        self.grid[ 0:1, int(1*COLS_PER_VAR):int(2*COLS_PER_VAR) ] = pn.Column(pn.pane.Bokeh(cell.plot_legend), width = 270, height = 270,sizing_mode = 'fixed')
         # if self.status == "static":
         #     start_point = ( 0, int((col+1)*COLS_PER_VAR) )
         #     end_point = ( row+1, int((col+1)*COLS_PER_VAR+1) )
