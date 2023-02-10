@@ -49,9 +49,9 @@ class Widget_Single_Matrix():
         #     self.widget_box.append(pn.Spacer(height=16))
         ##
         if self.status == "i_value":
-            self.slider_titles_map = {"stratify": "Set the range of *", "atomic":"Set the value of *","shift":"Set the shift (x) of *'s values","variance":"Set the scale (x) of *'s variance (x*variance)"}
+            self.slider_titles_map = {"stratify": "Set the range of $", "atomic":"Set the value of $","shift":"Set the shift (x) of $'s values","variance":"Set the scale (x) of $'s variance (x*variance)"}
         else:
-            self.slider_titles_map = {"atomic":"The value of * is","shift":"The shift (x) of *'s values is","variance":"The scale (x) of *'s variance (x*variance) is"}
+            self.slider_titles_map = {"atomic":"The value of $ is","shift":"The shift (x) of $'s values is","variance":"The scale (x) of $'s variance (x*variance) is"}
         ## track record of interactions
         self.intervention_selection = [] # List of (i_type,i_var)
         self.slider_selection = {} # Dict (<idx in self.intervention_selection>: List of idx to slider values)
@@ -220,7 +220,7 @@ class Widget_Single_Matrix():
     
     async def locked_update(self, i, var, i_type, interventions):
         if i < len(interventions[var]):
-            self.slider.title = self.slider_titles_map[i_type].replace("*",var)+":"+"{:.2f}".format(interventions[var][i])
+            self.slider.title = self.slider_titles_map[i_type].replace("$",var)+":"+"{:.2f}".format(interventions[var][i])
             self.slider.value = i
         else:##animation finished
             self.no_i_button.clicks = self.no_i_button.clicks+1
@@ -291,7 +291,7 @@ class Widget_Single_Matrix():
             if var:
                 if self.status in ["i_value", "animated"]:
                     interv_values = interv_data[var]
-                    self.slider.title = self.slider_titles_map[i_type].replace("*",var)+":"+"{:.2f}".format(interv_values[new])
+                    self.slider.title = self.slider_titles_map[i_type].replace("$",var)+":"+"{:.2f}".format(interv_values[new])
         else:
             self.intervention_selection.append((None,None))     
             if len(self.intervention_selection)-1 not in self.slider_selection:
@@ -391,14 +391,14 @@ class Widget_Single_Matrix():
             self.slider.start = 0
             self.slider.end = len(interv_values)-1
             self.slider.step = 1
-            self.slider.title = self.slider_titles_map[i_type].replace("*",var)+":"+"{:.2f}".format(interv_values[0])
+            self.slider.title = self.slider_titles_map[i_type].replace("$",var)+":"+"{:.2f}".format(interv_values[0])
             self.slider.value = 0  
         elif self.status == "animated":
             interv_values = interventions[var]
             self.slider.start = 0
             self.slider.end = len(interv_values)-1
             self.slider.step = 1
-            self.slider.title = self.slider_titles_map[i_type].replace("*",var)+":"+"{:.2f}".format(interv_values[0])
+            self.slider.title = self.slider_titles_map[i_type].replace("$",var)+":"+"{:.2f}".format(interv_values[0])
             self.slider.value = 0
     
     def _retrieve_intervention_argument(self, var, intervention_data, value_idx = [0,None]):
