@@ -2,7 +2,7 @@ from ..utils.functions import kde, pmf, get_data_hgh_indices, retrieve_intervent
 from ..utils.constants import DATA_SIZE, DATA_DIST_RATIO, RUG_DIST_RATIO, RUG_SIZE, BORDER_COLOR, DATA_HGH_NUM, num_i_values, BASE_COLOR, SECONDARY_COLOR, STATIC_BASE_COLOR
 
 from bokeh.plotting import figure
-from bokeh.models import ColumnDataSource, ColorBar,LinearColorMapper
+from bokeh.models import ColumnDataSource, ColorBar, LinearColorMapper, Legend, Line
 from bokeh.palettes import Oranges256, Magma256, Viridis256, Turbo256
 import colorcet as cc
 from bokeh.models import NumeralTickFormatter,BasicTicker
@@ -29,6 +29,8 @@ class KDE_Cell():
         ##
         self.plot = None
         self.plot_colorbar = None
+        self.plot_legend = None
+        self.legend = None
         ## 
         self.var_type = self.data.get_var_type(self.var)
         self.pp_samples = self.data.get_var_pp_samples(self.var, self.dag_id) ## numpy array of posterior predictive samples
@@ -102,6 +104,7 @@ class KDE_Cell():
                 self.plot_colorbar = figure(height=600, width=0, title = "",title_location = "left",toolbar_location=None, min_border=0, outline_line_color=None)
                 self.plot_colorbar.title.align = "right"
                 self.plot_colorbar.title.text_font_size = "16px"
+                self.plot_colorbar.title.text_font_style = "normal"
                 self.plot_colorbar.margin = 0
                 self.plot_colorbar.min_border = 0
                 self.plot_colorbar.frame_width=0
@@ -122,6 +125,27 @@ class KDE_Cell():
             self.pp_scat = self.plot.scatter('x', 'y', source = self.kde_obs_cds, size = 4, fill_color = self.base_color, fill_alpha = 1.0, line_color = self.base_color)
             self.i_pp_line = self.plot.segment(x0 = 'x', y0 ='y0', x1 = 'x', y1 = 'y', source = self.kde_interv_cds, line_alpha = 0.5, color = self.second_color, line_width = 1)
             self.i_pp_scat = self.plot.scatter('x', 'y', source = self.kde_interv_cds, size = 4, fill_color = self.second_color, fill_alpha = 0.5, line_color = self.second_color)
+        ## LEGEND   
+        self.plot_legend = figure(width=140, height=140,min_border=0,toolbar_location=None, outline_line_color=None)
+        self.plot_legend.yaxis.visible = False
+        self.plot_legend.xaxis.visible = False
+        self.plot_legend.xgrid.grid_line_color = None
+        self.plot_legend.ygrid.grid_line_color = None
+
+        source = ColumnDataSource(data=dict(x=[0,1], y=[1,1]))
+        line_glyph1 = Line(x="x", y="y", line_color=self.base_color, line_width=2)
+        line1 = self.plot_legend.add_glyph(source, line_glyph1)
+        line1.visible = False
+        if self.status not in ['static']:
+            line_glyph2 = Line(x="x", y="y", line_color=self.second_color, line_width=2)
+            line2 = self.plot_legend.add_glyph(source, line_glyph2)
+            line2.visible = False   
+            self.legend = Legend(items=[("before interv.", [line1]), ("after interv.", [line2])], location="center", orientation="vertical",
+                        border_line_color="white", title='Simulated Data', title_text_font_size = '12pt', title_text_font_style = 'normal', label_text_font_size = '12pt')
+        else:
+            self.legend = Legend(items=[("before interv.", [line1])], location="center", orientation="vertical",
+                        border_line_color="white", title='Simulated Data', title_text_font_size = '12pt', title_text_font_style = 'normal', label_text_font_size = '12pt')
+        self.plot_legend.add_layout(self.legend, "center")    
         ## DATA     
         if self.showData:
             self.obs_left = self.plot.asterisk('x', 'y', size = DATA_SIZE, line_color = '#00CCFF', source = self.data_cds_left)
@@ -202,11 +226,11 @@ class KDE_Cell():
                         group_id.append(mean_group_intev_values[idx])
                         ##
                         if i_type == "shift":
-                            self.plot_colorbar.title.text = i_var+" shift x"
+                            self.plot_colorbar.title.text = "Simulated Data after interv.: "+i_var+" shift x"
                         elif i_type == "variance":
-                            self.plot_colorbar.title.text = i_var+" variance x"
+                            self.plot_colorbar.title.text = "Simulated Data after interv.: "+i_var+" variance x"
                         else:
-                            self.plot_colorbar.title.text = i_var
+                            self.plot_colorbar.title.text = "Simulated Data after interv.: "+i_var
                         self.color_bar.color_mapper.high = max(mean_group_intev_values)
                         self.color_bar.color_mapper.low = min(mean_group_intev_values)
                         self.color_bar.visible = True
