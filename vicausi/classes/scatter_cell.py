@@ -81,7 +81,7 @@ class Scatter_Cell():
         if self.showData:
             self.obs_circle = self.plot.circle('x', 'y', size = 5, color = '#00CCFF', source = self.data_pairs_cds)
         if self.status not in ['static']:
-            self.i_pp_circle = self.plot.circle('x', 'y', size = 1, color = self.second_color, source = self.scatter_interv_cds)
+            self.i_pp_circle = self.plot.circle('x', 'y', size = 1.5, color = self.second_color, source = self.scatter_interv_cds)
         else:
             mapper = linear_cmap(field_name = 'group', palette = cc.b_linear_bmy_10_95_c71, low = 0, high = num_i_values-1)
             # mapper = linear_cmap(field_name = 'group', palette = cc.b_rainbow_bgyrm_35_85_c69[29:], low = 0, high = num_i_values-1)#cc.b_rainbow_bgyrm_35_85_c69
