@@ -50,9 +50,7 @@ class Causal_DAG():
         self.plot.grid.grid_line_color = None
         self.plot.title.align = "center"
         self.plot.title.text_font_size = self.title_font_size
-        # self.plot.margin = 0
-        # self.plot.min_border = 0
-        # self.plot.frame_width=0
+        # self.plot.title.text_font_style = "normal"
         ##
         graph = self._create_digraph()
         pos = nx.planar_layout(graph)
