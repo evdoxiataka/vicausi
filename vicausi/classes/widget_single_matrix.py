@@ -40,13 +40,12 @@ class Widget_Single_Matrix():
         self.w_str = None ## for stratification
         self.slider = None
         self.no_i_button = None
+        self.play_button = None
         if self.addToggles:
             # self.toggle1 = None ## toggle button for observations
             # self.toggle2 = None ## toggle button for posterior predictive samples
             self.toggle3 = None ## toggle button for after intervention samples
         self.widget_box = []
-        # if self.status == "animated":
-        #     self.widget_box.append(pn.Spacer(height=16))
         ##
         if self.status == "i_value":
             self.slider_titles_map = {"stratify": "Set the range of $", "atomic":"Set the value of $","shift":"Set the shift (x) of $'s values","variance":"Set the scale (x) of $'s variance (x*variance)"}
@@ -106,6 +105,9 @@ class Widget_Single_Matrix():
         ## SLIDER 
         if self.status in ["i_value", "animated"]:
             self.slider = Slider(start=0., end=5., value=0., step=1., title = self.slider_titles_map[list(self.action_vars.keys())[0]], show_value = False, tooltips = False, disabled = True)                
+        ##
+        if self.status == "animated" and self.single_intervention:
+            self.play_button = pn.widgets.Button(name='Play', button_type='primary')
         # if self.slider is not None:# and self.status != "animated"
         #     self.widget_box.append(self.slider)
 
@@ -154,7 +156,10 @@ class Widget_Single_Matrix():
                         if self.w_str:
                             self.slider.on_change("value", partial(self.sel_value_update_cell, "stratify", cell))
                  
-    def register_callbacks(self):        
+    def register_callbacks(self): 
+        ## play button
+        if self.play_button:
+            self.play_button.on_click(self.play_button_callback)                   
         ## No Intervention button
         self.no_i_button.on_click(self.no_interv_update_slider)
         ## ATOMIC
@@ -223,7 +228,8 @@ class Widget_Single_Matrix():
             self.slider.title = self.slider_titles_map[i_type].replace("$",var)+":"+"{:.2f}".format(interventions[var][i])
             self.slider.value = i
         else:##animation finished
-            self.no_i_button.clicks = self.no_i_button.clicks+1
+            # self.no_i_button.clicks = self.no_i_button.clicks+1
+            self.no_i_button.disabled = False
             if self.w_a:
                 self.w_a.disabled = False
             if self.w_s:
@@ -248,17 +254,18 @@ class Widget_Single_Matrix():
                 self.w_s.disabled = True
             if self.w_v:
                 self.w_v.disabled = True
+            self.no_i_button.disabled = True
             ##
             interventions = self._retrieve_intervention_values(i_type)
             
-            for i,_ in enumerate(interventions[var]):  
-                self.tic = time.perf_counter()              
+            for i,_ in enumerate(interventions[var]): 
+                # self.tic = time.perf_counter()              
                 pn.state.curdoc.add_next_tick_callback(partial(self.locked_update, i, var, i_type, interventions))
-                await asyncio.sleep(0.4)
-                self.toc = time.perf_counter()
+                await asyncio.sleep(0.45)
+                # self.toc = time.perf_counter()
                 # print(self.toc-self.tic,"sec")
             pn.state.curdoc.add_next_tick_callback(partial(self.locked_update, i+1, var, i_type, interventions))
-            
+            self.widget_box[0][1].value = ""
             # print(len(interventions[var])/(self.toc-self.tic),"fps")
         
     def sel_var_update_slider(self, i_type, event):
@@ -304,8 +311,12 @@ class Widget_Single_Matrix():
             interv_data = self._retrieve_intervention_values(i_type)
             intervention_arg = self._retrieve_intervention_argument(var, interv_data, [new,None])
             cell.update_plot(intervention_arg, i_type)
-        
-    # ## CALLBACKs called when no intervention button is clicked
+
+    ## CALLBACKs called when no intervention button is clicked
+    def play_button_callback(self, event):
+        self.widget_box[0][1].value = self.widget_box[0][1].options[0]
+
+    ## CALLBACKs called when no intervention button is clicked
     def no_interv_update_slider(self, event):
         self._reset_i_radio_buttons()
         self._reset_slider()
@@ -448,7 +459,10 @@ class Widget_Single_Matrix():
         self.slider.disabled = True
 
     def get_widget_box(self):
-        return self.widget_box
+        if self.status == "animated" and self.single_intervention:
+            return [self.play_button]
+        else:
+            return self.widget_box 
 
     def get_widget_box_without_slider(self):
         if self.slider:
