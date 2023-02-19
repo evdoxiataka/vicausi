@@ -237,6 +237,15 @@ class KDE_Cell():
                         self.color_bar.color_mapper.low = min(mean_group_intev_values)
                         self.color_bar.visible = True
                 self.kde_interv_cds.data = {'x':x_list,'y':y_list,'group':group_id} 
+                ## fix limits of y axis
+                y_max = [self.kde_obs_cds.data['y'].max()]
+                for i in y_list:
+                    y_max.append(i.max())
+                y_max = np.array(y_max).max().item()
+                self.y_max = y_max + 0.05*y_max
+                self.y_min = -1*self.y_max/RUG_DIST_RATIO - 0.6*(self.y_max/RUG_DIST_RATIO)
+                self.plot.y_range.end = self.y_max
+                self.plot.y_range.start = self.y_min
                 ## COLORBAR
                 if len(x_list) == 0:
                     self.plot_colorbar.title.text = ""
