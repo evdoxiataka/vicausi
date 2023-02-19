@@ -1,6 +1,7 @@
 import numpy as np
 import json
 from ..utils.constants import x_range_mag, stratification_window_magn
+from ..utils.functions import kde
 
 class Data():
 
@@ -18,11 +19,27 @@ class Data():
         self.atomic_interventions = {}
         self.shift_interventions = {}
         self.variance_interventions = {} 
+        ##
+        self.kdes = {}
         #
         self.graph = None
         ##
         self._retrieve_causal_inference_from_files()
-        
+        self._estimate_kdes()
+
+    def _estimate_kdes(self):        
+        for dag_id in self.causal_inference['dags']:
+            self.kdes[dag_id] = {}
+            for samples_type in self.causal_inference['dags'][dag_id]:                
+                if samples_type in ["ia_samples","is_samples","iv_samples"]:
+                    self.kdes[dag_id][samples_type] = {}
+                    for i_var in self.causal_inference['dags'][dag_id][samples_type]:
+                        self.kdes[dag_id][samples_type][i_var] = {}
+                        for var in self.causal_inference['dags'][dag_id][samples_type][i_var]: 
+                            self.kdes[dag_id][samples_type][i_var][var] = []
+                            for i_data in self.causal_inference['dags'][dag_id][samples_type][i_var][var]:
+                                self.kdes[dag_id][samples_type][i_var][var].append(kde(i_data))
+                                                                                        
     def _retrieve_causal_inference_from_files(self):
         """
         Parameters:
@@ -317,6 +334,20 @@ class Data():
             return self.causal_inference['dags'][dag_id][samples_type][i_var][var]
         else:
             return None
+
+    def get_kde_y_range(self, i_var, var, dag_id, i_type, pp_samples_kde_y_max):
+        samples_type = ""
+        if i_type == "atomic":
+            samples_type = "ia_samples"
+        elif i_type == "shift":
+            samples_type = "is_samples"
+        elif i_type == "variance":
+            samples_type = "iv_samples"
+        if samples_type!="" and i_var in self.kdes[dag_id][samples_type] and var in self.kdes[dag_id][samples_type][i_var]:
+            y_max = [pp_samples_kde_y_max]
+            for i in range(len(self.kdes[dag_id][samples_type][i_var][var])):
+                y_max.append(self.kdes[dag_id][samples_type][i_var][var][i]['y'].max())
+        return np.array(y_max).max().item()
             
 
     

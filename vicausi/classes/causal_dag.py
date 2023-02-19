@@ -46,7 +46,7 @@ class Causal_DAG():
         ## FIGURE
         self.plot = figure(width = 260, height = 210, x_range = (-1.25, 1.6), y_range = (-1.1, 1.2),
                   x_axis_location = None, y_axis_location = None, toolbar_location = None, background_fill_color = None, outline_line_color = None,
-                  title="Causal Model"+" "+str(self.dag_id + 1))##BORDER_COLOR
+                  title="DAG of Causal Model"+" "+str(self.dag_id + 1))##BORDER_COLOR
         self.plot.grid.grid_line_color = None
         self.plot.title.align = "center"
         self.plot.title.text_font_size = self.title_font_size

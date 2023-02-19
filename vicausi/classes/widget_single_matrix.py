@@ -8,7 +8,7 @@ pn.extension()
 
 class Widget_Single_Matrix():
     
-    def __init__(self, status, action_vars, interventions_data, addToggles = True):
+    def __init__(self, status, action_vars, interventions_data, grid_obj, addToggles = True):
         """
             Parameters:
             --------
@@ -20,12 +20,13 @@ class Widget_Single_Matrix():
         self.status = status
         self.interventions_data = interventions_data
         self.action_vars = action_vars
+        self.grid_obj = grid_obj
         self.addToggles = addToggles
         ##
         self.tic =""
         self.toc = ""
         ##
-        self.width = 310
+        self.width = 340
         self.font_size = "16px"
         self.style = {'font-size': self.font_size,'margin-bottom': '0px','margin-top': '0px'}
         ##
@@ -66,7 +67,7 @@ class Widget_Single_Matrix():
             # if self.single_intervention and self.status == "animated":
             #     title = pn.pane.Markdown(''' Click to start the animation ''', style=self.style)
             # else:                
-            title = pn.pane.Markdown(''' Atomic Intervention (set the value) ''', style=self.style, width=self.width)
+            title = pn.pane.Markdown(''' Atomic Intervention (set variable's value) ''', style=self.style, width=self.width)
             self.widget_box.append(pn.WidgetBox(title, self.w_a))
         ## Shift
         if "shift" in self.action_vars:
@@ -74,7 +75,7 @@ class Widget_Single_Matrix():
             # if self.single_intervention and self.status == "animated":
             #     title = pn.pane.Markdown(''' Click to start the animation ''', style=self.style)
             # else:                
-            title = pn.pane.Markdown(''' Shift Intervention (shift all values by x) ''', style=self.style, width=self.width)
+            title = pn.pane.Markdown(''' Shift Intervention (shift variable's values by x) ''', style=self.style, width=self.width)
             self.widget_box.append(pn.WidgetBox(title, self.w_s))
         ## Variance
         if "variance" in self.action_vars:
@@ -82,7 +83,7 @@ class Widget_Single_Matrix():
             # if self.single_intervention and self.status == "animated":
             #     title = pn.pane.Markdown(''' Select the variable below to start the animation ''', style=self.style)
             # else:                
-            title = pn.pane.Markdown(''' Variance Intervention (scale variance by x) ''', style=self.style, width=self.width)
+            title = pn.pane.Markdown(''' Variance Intervention (scale variable's variance by x) ''', style=self.style, width=self.width)
             self.widget_box.append(pn.WidgetBox(title, self.w_v))
         ## Stratify
         if "stratify" in self.action_vars:
@@ -309,7 +310,7 @@ class Widget_Single_Matrix():
         var = self._retrieve_radio_button_selection(i_type)
         if var:
             interv_data = self._retrieve_intervention_values(i_type)
-            intervention_arg = self._retrieve_intervention_argument(var, interv_data, [new,None])
+            intervention_arg = self._retrieve_intervention_argument(var, interv_data, [new,None])            
             cell.update_plot(intervention_arg, i_type)
 
     ## CALLBACKs called when no intervention button is clicked

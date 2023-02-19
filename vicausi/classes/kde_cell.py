@@ -27,6 +27,9 @@ class KDE_Cell():
         if self.status == "static":
             self.base_color = STATIC_BASE_COLOR
         ##
+        self.y_max = None
+        self.y_min = None
+        ##
         self.plot = None
         self.plot_colorbar = None
         self.plot_legend = None
@@ -81,9 +84,11 @@ class KDE_Cell():
             r_data = self.pp_samples.flatten()
             self.rug_obs_cds = ColumnDataSource(data = {'x':r_data,'y':np.asarray([-1*max_v/RUG_DIST_RATIO]*len(r_data)),'size':np.asarray([RUG_SIZE]*len(r_data))})
         ## FIGURE
-        self.plot = figure(width = 420, height = 420, tools = [], x_range = self.x_range)#"wheel_zoom,reset,box_zoom" 
+        y_min = -1*max_v/RUG_DIST_RATIO - 0.6*(max_v/RUG_DIST_RATIO)
+        self.plot = figure(width = 420, height = 420, tools = [], x_range = self.x_range,y_range = (y_min,max_v+0.1*max_v))#"wheel_zoom,reset,box_zoom" 
         self.plot.xaxis.axis_label_text_font_size = "13pt"
         self.plot.xaxis.major_label_text_font_size = "11pt"
+        # self.plot.ygrid.grid_line_color = None
         # self.plot.axis.axis_label_text_font_style = 'bold'        
         self.plot.yaxis.visible = False
         self.plot.xaxis[0].axis_label = self.var
@@ -141,10 +146,10 @@ class KDE_Cell():
             line2 = self.plot_legend.add_glyph(source, line_glyph2)
             line2.visible = False   
             self.legend = Legend(items=[("before interv.", [line1]), ("after interv.", [line2])], location="center", orientation="vertical",
-                        border_line_color="white", title='Simulated Data', title_text_font_size = '12pt', title_text_font_style = 'normal', label_text_font_size = '12pt')
+                        border_line_color="white", title='', title_text_font_size = '12pt', title_text_font_style = 'normal', label_text_font_size = '12pt')
         else:
             self.legend = Legend(items=[("before interv.", [line1])], location="center", orientation="vertical",
-                        border_line_color="white", title='Simulated Data', title_text_font_size = '12pt', title_text_font_style = 'normal', label_text_font_size = '12pt')
+                        border_line_color="white", title='', title_text_font_size = '12pt', title_text_font_style = 'normal', label_text_font_size = '12pt')
         self.plot_legend.add_layout(self.legend, "center")    
         ## DATA     
         if self.showData:
@@ -161,7 +166,9 @@ class KDE_Cell():
             intervention: Dict(<i_var>: (value_idx, value))
             i_type: String in {"atomic", "shift","variance"}
         """ 
+        ##
         i_var, i_value_idx, i_value = retrieve_intervention_info(intervention)
+        ##
         if i_type == "stratify":
             samples_idx = self.data.get_var_pp_samples_idx(i_var, self.dag_id, i_value[0])
             data = self.pp_samples.flatten()[samples_idx]
@@ -169,18 +176,6 @@ class KDE_Cell():
             samples = self.data.get_var_i_samples(i_var, self.var, self.dag_id, i_type)
             if i_var and samples is not None:
                 if self.status in ["i_value","animated"] and self.var == i_var and i_type == "atomic":
-                    ## when i_value takes single value and we take a window of values around it
-                    # i_idx = i_value_idx[0]
-                    # i_idx_min = i_idx
-                    # i_idx_max = i_idx
-                    # if i_idx - 1 >= 0:
-                    #     i_idx_min = i_idx - 1
-                    # if i_idx + 1 < len(samples):
-                    #     i_idx_max = i_idx + 2
-                    # data = np.array([samples[[[*range(i_idx_min, i_idx_max, 1)]]][0][0][0]])
-                    # ## when i_value is single value
-                    # data = np.array([samples[i_value_idx[0]][0][0][0]])
-                    ## when i_value takes values aroung a value
                     data = samples[i_value_idx]
                     if self.showData:
                         data_hgh_idx = get_data_hgh_indices(i_value[0], self.data_cds.data['x'], DATA_HGH_NUM)
@@ -205,8 +200,15 @@ class KDE_Cell():
         ## KDE CDS
         if self.var_type == "Continuous":
             if self.status not in ["static"]:
+                ## fix limits of y axis
+                y_max = self.data.get_kde_y_range(i_var, self.var, self.dag_id, i_type, self.kde_obs_cds.data['y'].max())
+                self.y_max = y_max + 0.05*y_max
+                self.y_min = -1*self.y_max/RUG_DIST_RATIO - 0.6*(self.y_max/RUG_DIST_RATIO)
+                self.plot.y_range.end = self.y_max
+                self.plot.y_range.start = self.y_min
+                ##
                 kde_est = kde(data) 
-                self.kde_interv_cds.data = {'x':kde_est['x'],'y':kde_est['y']} 
+                self.kde_interv_cds.data = {'x':kde_est['x'],'y':kde_est['y']}             
             else:
                 x_list = []
                 y_list = []
@@ -226,11 +228,11 @@ class KDE_Cell():
                         group_id.append(mean_group_intev_values[idx])
                         ##
                         if i_type == "shift":
-                            self.plot_colorbar.title.text = "Simulated Data after interv.: "+i_var+" shift x"
+                            self.plot_colorbar.title.text = "after interv.: "+i_var+" shift x"
                         elif i_type == "variance":
-                            self.plot_colorbar.title.text = "Simulated Data after interv.: "+i_var+" variance x"
+                            self.plot_colorbar.title.text = "after interv.: "+i_var+" variance x"
                         else:
-                            self.plot_colorbar.title.text = "Simulated Data after interv.: "+i_var
+                            self.plot_colorbar.title.text = "after interv.: "+i_var
                         self.color_bar.color_mapper.high = max(mean_group_intev_values)
                         self.color_bar.color_mapper.low = min(mean_group_intev_values)
                         self.color_bar.visible = True
@@ -243,7 +245,10 @@ class KDE_Cell():
             kde_est = pmf(data) 
             self.kde_interv_cds.data = {'x':kde_est['x'], 'y':kde_est['y'], 'y0':kde_est['y0']} 
         ## OBSERVATIONS CDS
-        max_v = np.concatenate((self.kde_obs_cds.data['y'], np.array(self.kde_interv_cds.data['y']).flatten()), axis=None).max()
+        if self.y_max:
+            max_v = self.y_max
+        else:
+            max_v = np.concatenate((self.kde_obs_cds.data['y'], np.array(self.kde_interv_cds.data['y']).flatten()), axis=None).max()
         if self.showData:
             data_obs = self.data_cds.data['x']
             if len(data_hgh_idx) == 0:

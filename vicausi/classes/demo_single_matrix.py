@@ -68,24 +68,25 @@ class Demo_Single_Matrix():
         self.dag_objs = [Causal_DAG(self.data, dag_id, self.status, self.var_order) for dag_id in causal_dags_ids]
         # causal_dags_obj = [Causal_DAG(self.data, dag_id, self.var_order) for dag_id in self.dags_presented]
         ## Markdowns
-        t_graphs = pn.pane.Markdown('''Simulated Data of an Unidentified Causal Model''',style=self.style,width=self.width)
-        t_dags = pn.pane.Markdown(''' DAGs of Possible Causal Models''', style=self.style)
+        # t_graphs = pn.pane.Markdown('''Simulated Data of an Unidentified Causal Model''',style=self.style,width=self.width)
+        # t_dags = pn.pane.Markdown(''' DAGs of Possible Causal Models''', style=self.style)
         if self.single_intervention and self.status == "animated":
-            t_radio = pn.pane.Markdown('''*Select 'Play' to watch the animation of the simulated data of the intervention.*''', style=self.style, width = self.width)
+            t_radio = pn.pane.Markdown('''*Select 'Play' to watch the animation of the data from the intervention.*''', style=self.style, width = self.width)
         elif self.single_intervention == False:
-            t_radio = pn.pane.Markdown('''*Select an intervention to see the simulated data of the intervention.*''', style=self.style, width = self.width)
-        ## Create Widget object
-        interv_data = self.data.get_interventions(self.dag_id) ## Dict (<itype>: Dict(<var>:List/numpy array of samples))
-        self.widget_obj = Widget_Single_Matrix(self.status, self.action_vars, {itype:interv_data[itype] for itype in self.action_vars if itype in interv_data})
+            t_radio = pn.pane.Markdown('''*Select an intervention type on a variable to see the data from the intervention.*''', style=self.style, width = self.width)
         ## Create Scatter Matrix
         self.grid_obj = Scatter_Matrix(self.data, self.dag_id, self.var_order, self.status, self.showData)
+        ## Create Widget object
+        interv_data = self.data.get_interventions(self.dag_id) ## Dict (<itype>: Dict(<var>:List/numpy array of samples))
+        self.widget_obj = Widget_Single_Matrix(self.status, self.action_vars, {itype:interv_data[itype] for itype in self.action_vars if itype in interv_data},self.grid_obj)
         ##
         self.widget_obj.register_callbacks_to_dags(self.dag_objs)
         self.widget_obj.register_callbacks_to_cells([self.grid_obj])
         ## DIAGRAMS - FIGURES 
         ## DAGS col
         dags_cols = [pn.Column(pn.pane.Bokeh(self.dag_objs[i].get_plot())) for i,_ in enumerate(self.dag_objs)]
-        self.dags_col = pn.Column(t_dags,*dags_cols)
+        self.dags_col = pn.Column(*dags_cols)
+        # self.dags_col = pn.Column(t_dags,*dags_cols)
         ## GRID col
         if self.status not in ["static"]:
             grids_col = pn.Column(pn.Column(self.widget_obj.slider, css_classes=['panel-widget-box'], width = self.width), self.grid_obj.get_grid())
@@ -100,15 +101,18 @@ class Demo_Single_Matrix():
             ## PLOT
             if self.status not in ["animated"]:  
                 self._activate_radio_button_if_single_inter(self.widget_obj)   
-                self.plot = pn.Column(t_graphs, pn.Row(pn.Column(grids_col, self.widget_obj.toggle3), self.dags_col))                           
+                self.plot = pn.Column(pn.Row(pn.Column(grids_col, self.widget_obj.toggle3), self.dags_col)) 
+                # self.plot = pn.Column(t_graphs, pn.Row(pn.Column(grids_col, self.widget_obj.toggle3), self.dags_col))                           
                 # self.plot = pn.Row(pn.Column(t_graphs, grids_col, self.widget.toggle3), self.dags_col)
             else:
-                self.plot = pn.Column(t_graphs,widget_row, pn.Row(pn.Column(grids_col, self.widget_obj.toggle3), self.dags_col))
+                self.plot = pn.Column(widget_row, pn.Row(pn.Column(grids_col, self.widget_obj.toggle3), self.dags_col))
+                # self.plot = pn.Column(t_graphs,widget_row, pn.Row(pn.Column(grids_col, self.widget_obj.toggle3), self.dags_col))
                 # self.widget_obj.widget_box[0][1].value = self.widget_obj.widget_box[0][1].options[0] 
                 # self.plot = pn.Row(pn.Column(t_graphs,widget_col, grids_col), self.dags_col)
         else:                
             ## PLOT
-            self.plot = pn.Column(t_graphs,widget_row,pn.Row(pn.Column(grids_col,self.widget_obj.no_i_button),self.dags_col)) 
+            self.plot = pn.Column(widget_row,pn.Row(pn.Column(grids_col,self.widget_obj.no_i_button),self.dags_col)) 
+            # self.plot = pn.Column(t_graphs,widget_row,pn.Row(pn.Column(grids_col,self.widget_obj.no_i_button),self.dags_col)) 
             # if self.status not in ["animated"]:       
             #     self.plot = pn.Column(t_graphs,widget_row,pn.Row(pn.Column(grids_col,self.widget_obj.no_i_button),self.dags_col))        
             #     # self.plot = pn.Row(pn.Column(t_graphs,widget_col,t_interaction,grids_col,self.widget.no_i_button), self.dags_col)
