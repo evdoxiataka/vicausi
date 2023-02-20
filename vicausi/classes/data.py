@@ -347,7 +347,9 @@ class Data():
             y_max = [pp_samples_kde_y_max]
             for i in range(len(self.kdes[dag_id][samples_type][i_var][var])):
                 y_max.append(self.kdes[dag_id][samples_type][i_var][var][i]['y'].max())
-        return np.array(y_max).max().item()
+            return np.array(y_max).max().item()
+        else:
+         return pp_samples_kde_y_max
             
 
     
