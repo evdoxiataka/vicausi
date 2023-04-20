@@ -11,10 +11,13 @@ This is enhanced with **interaction** or **animation** to present the simulated 
 The following videos demonstrate the three visualization modes offered by the tool for the presentation of the simulated data after the intervention.
 
 INTERACTIVE:
+
 https://user-images.githubusercontent.com/37831445/233374701-3ce53253-e71a-4b8d-a21c-645cd5bcf5b6.mp4
 
 ANIMATED:
+
 https://user-images.githubusercontent.com/37831445/233376718-0a6c3683-1586-4457-a3b9-9c4c16622036.mp4
 
 STATIC:
+
 https://user-images.githubusercontent.com/37831445/233374146-c24af4cb-4335-478b-bae6-ed3a82cfba25.mp4
